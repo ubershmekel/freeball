@@ -1,4 +1,15 @@
-<h2>Hello good sir</h2>
-<script src="js/config.js"></script>
-<script src="libs/require.js/require.js"></script>
-<script src="js/viewer.js"></script>
+<html>
+    <head>
+    </head>
+    <body>
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <script src="js/configRequire.js"></script>
+        <script src="libs/require.js/require.js"></script>
+        <script src="js/viewer.js"></script>
+        <script id="menuStart" type="x-tmpl-mustache">
+            Hello {{ name }}!
+            <button id="local">Local</button>
+            <button id="remote">Remote</button>
+        </script>
+    </body>
+</html>

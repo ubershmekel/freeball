@@ -7,7 +7,7 @@ var requirejs = require('requirejs');
 var game = requirejs('js/server.js');
 
 app.get('/', function(req, res){
-  res.sendfile('viewer.html');
+  res.sendFile(__dirname + '/viewer.html');
 });
 
 app.use('/', express.static('.'));

@@ -4,8 +4,13 @@ if (typeof define !== 'function') { var define = require('amdefine')(module) }
 var requirejs = require('requirejs');
 
 define(function(require) {
-    return function(tickCallback) {
+    var startGame = function(tickCallback) {
         var CANNON = require("cannon");
+        var ticksPerSecond = 30;
+        var msPerFrame = 1000.0 / ticksPerSecond;
+        var sPerFrame = 1.0 / ticksPerSecond;
+        var maxSubSteps = 3;
+        
         console.log('start sim');
 
         //var CANNON = require("cannon");
@@ -22,6 +27,7 @@ define(function(require) {
             shape: new CANNON.Sphere(radius)
         });
         world.addBody(sphereBody);
+        tickCallback({n: ["sphere"]})
 
         // Create a plane
         var groundBody = new CANNON.Body({
@@ -31,9 +37,6 @@ define(function(require) {
         groundBody.addShape(groundShape);
         world.addBody(groundBody);
 
-        var fixedTimeStep = 1.0 / 60.0; // seconds
-        var maxSubSteps = 3;
-
         // Start the simulation loop
         var lastTime;
         function simloop() {
@@ -41,13 +44,19 @@ define(function(require) {
             var time = new Date().getTime();
             if (lastTime !== undefined) {
                 var dt = (time - lastTime) / 1000;
-                world.step(fixedTimeStep, dt, maxSubSteps);
+                world.step(sPerFrame, dt, maxSubSteps);
             }
-            console.log("Sphere z position: " + sphereBody.position.z);
+            //console.log("Sphere z position: " + sphereBody.position.z);
             lastTime = time;
-            tickCallback(sphereBody.position.z);
+            var state = {
+                p: [sphereBody.position],
+                v: [sphereBody.velocity]
+            }
+            tickCallback(state);
         }
 
-        setInterval(simloop, 500);
+        setInterval(simloop, msPerFrame);
     };
+    
+    return startGame;
 });
