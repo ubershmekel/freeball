@@ -40,7 +40,7 @@ define(function(require) {
         // Setup our world
         var world = new CANNON.World();
         game.newBodiesThisTick = [];
-        game.newObj = function(body, typ) {
+        function newBody(body, typ) {
             // notify the client something is added to the world
             game.newBodiesThisTick.push(typ);
             world.addBody(body);
@@ -52,7 +52,18 @@ define(function(require) {
         var contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, { friction: 0.1, restitution: 0.8 });
         world.addContactMaterial(contactMaterial);
         
-        var createPlayer = function(teamI, playerI) {
+        function createBall() {
+            var radius = 2; // m
+            var sphereBody = new CANNON.Body({
+                mass: 2, // kg
+                position: new CANNON.Vec3(0, 0, 10), // m
+                shape: new CANNON.Sphere(radius),
+                material: physicsMaterial
+            });
+            newBody(sphereBody, {type: bodyTypes.ball});
+        }
+        
+        function createPlayer(teamI, playerI) {
             // Create a sphere
             var radius = 1; // m
             var x = playerI * 10;
@@ -63,26 +74,35 @@ define(function(require) {
                 shape: new CANNON.Sphere(radius),
                 material: physicsMaterial
             });
-            game.newObj(sphereBody, bodyTypes.ball);
+            var typeInfo = {
+                type: bodyTypes.player,
+                radius: radius,
+                teamI: teamI,
+                playerI: playerI
+            };
+            newBody(sphereBody, typeInfo);
         }
         
-        var teamSizes = [1, 1];
-        for(var teamI = 0; teamI < teamSizes.length; teamI++) {
-            var playerCount = teamSizes[teamI];
-            for(var playerI = 0; playerI < playerCount; playerI++) {
-                createPlayer(teamI, playerI);
+        function createAllPlayers() {
+            var teamSizes = [1, 1];
+            for(var teamI = 0; teamI < teamSizes.length; teamI++) {
+                var playerCount = teamSizes[teamI];
+                for(var playerI = 0; playerI < playerCount; playerI++) {
+                    createPlayer(teamI, playerI);
+                }
             }
-        }
-
-        // Create a plane
-        var groundBody = new CANNON.Body({
-            mass: 0, // mass == 0 makes the body static
-            material: physicsMaterial
-        });
-        var groundShape = new CANNON.Plane();
-        groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), -Math.PI/2);
-        groundBody.addShape(groundShape);
-        game.newObj(groundBody, bodyTypes.ground);
+        };
+        
+        function createGround() {
+            var groundBody = new CANNON.Body({
+                mass: 0, // mass == 0 makes the body static
+                material: physicsMaterial
+            });
+            var groundShape = new CANNON.Plane();
+            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), -Math.PI/2);
+            groundBody.addShape(groundShape);
+            newBody(groundBody, {type: bodyTypes.ground});
+        };
 
         // Start the simulation loop
         var lastTime = new Date().getTime();
@@ -111,9 +131,16 @@ define(function(require) {
             }
             tickCallback(state);
             setTimeout(simloop, msPerFrame);
-        }
+        };
 
-        setTimeout(simloop, msPerFrame);
+        function main() {
+            createGround();
+            createBall();
+            createAllPlayers();
+            setTimeout(simloop, msPerFrame);
+        }
+        
+        main();
     };
     
     return startGame;

@@ -9,10 +9,12 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
     var colors = {};
     colors.green = 0x99ff99;
     colors.red =   0xff9999;
+    colors.yellow =   0xffff99;
     colors.blue =  0x9999ff;
     colors.skyBlue = 0xddddff;
     var redMaterial = new THREE.MeshLambertMaterial( { color: colors.red } );
     var blueMaterial = new THREE.MeshLambertMaterial( { color: colors.blue } );
+    var yellowMaterial = new THREE.MeshLambertMaterial( { color: colors.yellow } );
     var ambientLight = new THREE.AmbientLight( 0x555555 );
     var earthTexture = new THREE.TextureLoader().load( 'images/land_ocean_ice_cloud_2048.jpg' );
     
@@ -111,8 +113,11 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
         renderer.domElement.id = rendererDivId;
         document.body.appendChild( renderer.domElement );
         
-        var radius = 1;
-        var ballGeometry = new THREE.SphereGeometry(radius, 32, 32);
+        var ballRadius = 2;
+        var ballGeometry = new THREE.SphereGeometry(ballRadius, 32, 32);
+        
+        var playerRadius = 1;
+        var playerGeometry = new THREE.SphereGeometry(playerRadius, 32, 32);
         
         function addBodyToScene(mesh, typ) {
             objects.push({
@@ -123,27 +128,25 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
             console.log(typ);
         }
         
-        function createBall () {
-            var ballMesh = new THREE.Mesh( ballGeometry, blueMaterial );
+        function createPlayer (typeInfo) {
+            var colors = {0: blueMaterial, 1: redMaterial};
+            var ballMesh = new THREE.Mesh( playerGeometry, colors[typeInfo.teamI] );
             ballMesh.castShadow = true;
             ballMesh.receiveShadow = true;
             ballMesh.position.set(0, 0, 0); 
+            addBodyToScene(ballMesh, bodyTypes.player);
+        };
+
+        function createBall (typeInfo) {
+            var ballMesh = new THREE.Mesh( ballGeometry, yellowMaterial );
+            ballMesh.castShadow = true;
+            ballMesh.receiveShadow = true;
+            ballMesh.position.set(0, 0, 0);
+
             addBodyToScene(ballMesh, bodyTypes.ball);
         };
         
-
-
-        function clearScene(scene) {
-            var renderer = document.getElementById(rendererDivId);
-            renderer.parentNode.removeChild(renderer);
-            var i;
-            for(i=0; i < scene.children.length; i++){
-                var obj = scene.children[i];
-                scene.remove(obj);
-            }
-        }
-        
-        function createPlane() {
+        function createPlane(typeInfo) {
             // floor
             var planeGeometry = new THREE.PlaneGeometry( 400, 200, 50, 50 );
             planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationZ( - Math.PI / 2 ) );
@@ -158,6 +161,17 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
             mesh.receiveShadow = true;
             addBodyToScene(mesh, bodyTypes.ground);
         }
+
+        function clearScene(scene) {
+            var renderer = document.getElementById(rendererDivId);
+            renderer.parentNode.removeChild(renderer);
+            var i;
+            for(i=0; i < scene.children.length; i++){
+                var obj = scene.children[i];
+                scene.remove(obj);
+            }
+        }
+
         
         viewer.update = function() {
             v.controls.update()
@@ -171,12 +185,15 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
                 // make new object
                 for(var i = 0; i < packet.n.length; i++) {
                     var newObj = packet.n[i];
-                    switch(newObj) {
+                    switch(newObj.type) {
                         case bodyTypes.ball:
-                            createBall();
+                            createBall(newObj);
+                            break;
+                        case bodyTypes.player:
+                            createPlayer(newObj);
                             break;
                         case bodyTypes.ground:
-                            createPlane();
+                            createPlane(newObj);
                             break;
                         default:
                             console.warn("Unhandled object type: " + newObj);
