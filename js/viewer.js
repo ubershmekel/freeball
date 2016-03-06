@@ -1,13 +1,9 @@
 /* global requirejs */
 // client-side THREE.JS viewer of the game
 var v;
-requirejs(['three', 'Stats', 'socketio', 'js/types', 'TrackballControls'], function(THREE, Stats, socketio, types) {
+requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballControls'], function(THREE, Stats, socketio, types, server) {
     var bodyTypes = types.bodyTypes;
     var socket = socketio();
-    socket.emit(types.eventTypes.startGame);
-    socket.on(types.eventTypes.tick, function(packet) {
-        v.serverTick(packet);
-    });
     
     var rendererDivId = "renderer";
     var colors = {};
@@ -149,7 +145,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'TrackballControls'], funct
         
         function createPlane() {
             // floor
-            var planeGeometry = new THREE.PlaneGeometry( 200, 400, 50, 50 );
+            var planeGeometry = new THREE.PlaneGeometry( 400, 200, 50, 50 );
             planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationZ( - Math.PI / 2 ) );
 
             var material = new THREE.MeshLambertMaterial( {
@@ -212,5 +208,15 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'TrackballControls'], funct
     }
     
     requestAnimationFrame( animate );
+
+    //server(function(packet) {
+    //    v.serverTick(packet)
+    //});
+    socket.emit(types.eventTypes.startGame);
+    socket.on(types.eventTypes.tick, function(packet) {
+        v.serverTick(packet);
+    });
+
+    
     return v;
 });

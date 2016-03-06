@@ -1,9 +1,8 @@
 
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
 
-var requirejs = require('requirejs');
-
 define(function(require) {
+    var CANNON = require("cannon");
     var bodyTypes = require("js/types").bodyTypes;
     
     var packetMembers = {
@@ -28,8 +27,6 @@ define(function(require) {
     }
     
     var startGame = function(tickCallback) {
-        var CANNON = require("cannon");
-        
         var ticksPerSecond = 50;
         var msPerFrame = 1000.0 / ticksPerSecond;
         var sPerFrame = 1.0 / ticksPerSecond;
@@ -83,7 +80,7 @@ define(function(require) {
             material: physicsMaterial
         });
         var groundShape = new CANNON.Plane();
-        groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1),-Math.PI/2);
+        groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), -Math.PI/2);
         groundBody.addShape(groundShape);
         game.newObj(groundBody, bodyTypes.ground);
 
