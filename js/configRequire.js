@@ -10,7 +10,7 @@ var require = {
     paths: {
         // --- start THREE sub-components
         three: 'libs/three.js/three',
-        Stats: 'libs/stats.js/build/stats.min',
+        Stats: 'js/Stats',
         TrackballControls: 'js/TrackballControls',
         socketio: 'socket.io/socket.io'
     }

@@ -5,6 +5,7 @@ var io = require('socket.io')(http);
 var requirejs = require('requirejs');
 
 var game = requirejs('js/server.js');
+var types = requirejs('js/types.js');
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/viewer.html');
@@ -15,9 +16,11 @@ app.use('/', express.static('.'));
 io.on('connection', function(socket){
     console.log('a user connected');
 
-    game(function(data) {
-        socket.emit('tick', data);
-    });
+    socket.on(types.eventTypes.startGame, function() {
+        game(function(data) {
+            socket.emit(types.eventTypes.tick, data);
+        });
+    })
 });
 
 http.listen(3000, function(){

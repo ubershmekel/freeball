@@ -1,24 +1,12 @@
 /* global requirejs */
 // client-side THREE.JS viewer of the game
 var v;
-requirejs(['three', 'Stats', 'socketio', 'TrackballControls'], function(THREE, Stats, socketio) {
-    
+requirejs(['three', 'Stats', 'socketio', 'js/types', 'TrackballControls'], function(THREE, Stats, socketio, types) {
+    var bodyTypes = types.bodyTypes;
     var socket = socketio();
-    socket.on('tick', function(update) {
-        //console.log(update);
-        if(update.n) {
-            // make new object
-            v.createBall();
-        }
-        if(update.p) {
-            for(var i = 0; i < update.p.length; i++) {
-                var obj = v.objects[i].mesh;
-                obj.position.copy(update.p[i]);
-                //var vec = update.p[i];
-                //obj.position.set(vec[0], vec[1], vec[2]);
-                //obj.velocity = update.v[i] 
-            }
-        }
+    socket.emit(types.eventTypes.startGame);
+    socket.on(types.eventTypes.tick, function(packet) {
+        v.serverTick(packet);
     });
     
     var rendererDivId = "renderer";
@@ -33,6 +21,11 @@ requirejs(['three', 'Stats', 'socketio', 'TrackballControls'], function(THREE, S
     var earthTexture = new THREE.TextureLoader().load( 'images/land_ocean_ice_cloud_2048.jpg' );
     
     var stats;
+    var createTickStats = function() {
+        var tickDiv = stats.createPanel( 'tick', '#ff0', '#020' );
+        var tickText = tickDiv.children[ 0 ];
+        var tickGraph = tickDiv.children[ 1 ];
+    }
     var initStats = function() {
 
         stats = new Stats();
@@ -42,7 +35,9 @@ requirejs(['three', 'Stats', 'socketio', 'TrackballControls'], function(THREE, S
         stats.domElement.style.position = 'absolute';
         stats.domElement.style.left = '0px';
         stats.domElement.style.top = '0px';
-
+        
+        //stats.domElement.
+        
         document.body.appendChild( stats.domElement );
     };
     initStats();
@@ -74,7 +69,7 @@ requirejs(['three', 'Stats', 'socketio', 'TrackballControls'], function(THREE, S
         viewer.objects = objects;
         
         var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        camera.position.set(100, 100, 100)
+        camera.position.set(50, 50, 50)
         
         viewer.camera = camera;
         viewer.audioListener = new THREE.AudioListener();
@@ -90,7 +85,7 @@ requirejs(['three', 'Stats', 'socketio', 'TrackballControls'], function(THREE, S
         scene.add( ambientLight );
 
         var light = new THREE.SpotLight( 0xffffff );
-        light.position.set( 10, 60, 20 );
+        light.position.set( 0, 0, 100 );
         light.target.position.set( 0, 0, 0 );
         if (true) {
             light.castShadow = true;
@@ -120,25 +115,29 @@ requirejs(['three', 'Stats', 'socketio', 'TrackballControls'], function(THREE, S
         renderer.domElement.id = rendererDivId;
         document.body.appendChild( renderer.domElement );
         
-        var radius = 5;
+        var radius = 1;
         var ballGeometry = new THREE.SphereGeometry(radius, 32, 32);
         
+        function addBodyToScene(mesh, typ) {
+            objects.push({
+                mesh: mesh,
+                type: typ
+            });
+            scene.add(mesh);
+            console.log(typ);
+        }
         
-        viewer.createBall = function() {
+        function createBall () {
             var ballMesh = new THREE.Mesh( ballGeometry, blueMaterial );
-            scene.add(ballMesh);
             ballMesh.castShadow = true;
             ballMesh.receiveShadow = true;
             ballMesh.position.set(0, 0, 0); 
-            objects.push({
-                mesh: ballMesh,
-                type: "ball"
-            });
+            addBodyToScene(ballMesh, bodyTypes.ball);
         };
         
 
 
-        viewer.clearScene = function(scene) {
+        function clearScene(scene) {
             var renderer = document.getElementById(rendererDivId);
             renderer.parentNode.removeChild(renderer);
             var i;
@@ -148,38 +147,68 @@ requirejs(['three', 'Stats', 'socketio', 'TrackballControls'], function(THREE, S
             }
         }
         
-        viewer.createPlane = function() {
+        function createPlane() {
             // floor
-            var planeGeometry = new THREE.PlaneGeometry( 300, 300, 50, 50 );
-            planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
+            var planeGeometry = new THREE.PlaneGeometry( 200, 400, 1000, 1000 );
+            planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationZ( - Math.PI / 2 ) );
 
             var material = new THREE.MeshLambertMaterial( {
                 color: colors.green,
-                map: earthTexture
+                //map: earthTexture
             });
 
             var mesh = new THREE.Mesh( planeGeometry, material );
             mesh.castShadow = true;
             mesh.receiveShadow = true;
-            scene.add( mesh );
+            addBodyToScene(mesh, bodyTypes.ground);
         }
         
-        viewer.tick = function() {
+        viewer.update = function() {
             v.controls.update()
             renderer.render( scene, camera );
         }
         
-        viewer.createPlane();
+        viewer.serverTick = function(packet) {
+            stats.update();
+            //console.log(packet);
+            if(packet.n) {
+                // make new object
+                for(var i = 0; i < packet.n.length; i++) {
+                    var newObj = packet.n[i];
+                    switch(newObj) {
+                        case bodyTypes.ball:
+                            createBall();
+                            break;
+                        case bodyTypes.ground:
+                            createPlane();
+                            break;
+                        default:
+                            console.warn("Unhandled object type: " + newObj);
+                    }
+                }
+            }
+            if(packet.p) {
+                //console.log(packet.p);
+                if(packet.p.length != objects.length)
+                    console.warn("Simulation and viewer object count desynced", packet.p.length, objects.length);
+                for(var i = 0; i < objects.length; i++) {
+                    var obj = objects[i].mesh;
+                    //obj.position.copy(packet.p[i]);
+                    var vec = packet.p[i];
+                    obj.position.set(vec[0], vec[1], vec[2]);
+                    //obj.velocity = packet.v[i] 
+                }
+            }  
+        }
+        
         return viewer;
     }
     
     v = initScene();
     
     function animate() {
-        stats.begin();
         requestAnimationFrame( animate );
-        v.tick();
-        stats.end();
+        v.update();
     }
     
     requestAnimationFrame( animate );
