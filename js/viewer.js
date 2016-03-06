@@ -91,13 +91,13 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'TrackballControls'], funct
             light.castShadow = true;
 
             light.shadow.camera.near = 20;
-            light.shadow.camera.far = 50;
-            light.shadow.camera.fov = 40;
+            light.shadow.camera.far = 100;
+            light.shadow.camera.fov = 80;
 
             light.shadowMapBias = 0.1;
             light.shadowMapDarkness = 0.7;
-            light.shadow.mapSize.Width = 2*512;
-            light.shadow.mapSize.Height = 2*512;
+            light.shadow.mapSize.Width = 4*512;
+            light.shadow.mapSize.Height = 4*512;
 
             //light.shadowCameraVisible = true;
         }
@@ -149,7 +149,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'TrackballControls'], funct
         
         function createPlane() {
             // floor
-            var planeGeometry = new THREE.PlaneGeometry( 200, 400, 1000, 1000 );
+            var planeGeometry = new THREE.PlaneGeometry( 200, 400, 50, 50 );
             planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationZ( - Math.PI / 2 ) );
 
             var material = new THREE.MeshLambertMaterial( {
@@ -198,7 +198,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'TrackballControls'], funct
                     obj.position.set(vec[0], vec[1], vec[2]);
                     //obj.velocity = packet.v[i] 
                 }
-            }  
+            }
         }
         
         return viewer;
