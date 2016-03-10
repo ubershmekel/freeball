@@ -111,14 +111,7 @@ define(function(require) {
             newBody(groundBody, {type: bodyTypes.ground});
         };
 
-        // Start the simulation loop
-        var lastTime = new Date().getTime();
-        var tick = -1;
-        function simloop() {
-            tick++;
-            var time = new Date().getTime();
-            var dt = (time - lastTime) / 1000;
-            
+        function handleCommands() {
             for(var i = 0; i < newCommands.length; i++) {
                 var com = newCommands[i];
                 try {
@@ -140,12 +133,9 @@ define(function(require) {
 
             }
             newCommands = [];
-            
-            //world.step(sPerFrame, dt, maxSubSteps);
-            //world.step(sPerFrame);
-            world.step(dt);
-            //console.log("Sphere z position: " + sphereBody.position.z);
-            lastTime = time;
+        }
+
+        function reportState() {
             var positions = [];
             var velocities = [];
             for(var i = 0; i < world.bodies.length; i++) {
@@ -162,6 +152,25 @@ define(function(require) {
                 newBodiesThisTick = [];
             }
             tickCallback(state);
+        }
+
+        // Start the simulation loop
+        var lastTime = new Date().getTime();
+        var tick = -1;
+        function simloop() {
+            tick++;
+            var time = new Date().getTime();
+            var dt = (time - lastTime) / 1000;
+            
+            handleCommands();
+            
+            //world.step(sPerFrame, dt, maxSubSteps);
+            //world.step(sPerFrame);
+            world.step(dt);
+            //console.log("Sphere z position: " + sphereBody.position.z);
+            lastTime = time;
+            
+            reportState();
             setTimeout(simloop, msPerFrame);
         };
 

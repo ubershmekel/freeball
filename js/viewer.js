@@ -221,18 +221,16 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
     
     function animate() {
         requestAnimationFrame( animate );
+        //controls.updateCommands();
         v.update();
     }
     
     requestAnimationFrame( animate );
 
-    //server(function(packet) {
-    //    v.serverTick(packet)
-    //});
+    // To run the server locally:
+    //server(v.serverTick);
     socket.emit(types.eventTypes.startGame);
-    socket.on(types.eventTypes.tick, function(packet) {
-        v.serverTick(packet);
-    });
+    socket.on(types.eventTypes.tick, v.serverTick);
     setInterval(function() {
         console.log('forward');
         socket.emit(types.eventTypes.command, new types.moveCommand('0-0', {x:0,y:1,z:0}));
