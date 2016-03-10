@@ -4,7 +4,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var requirejs = require('requirejs');
 
-var game = requirejs('js/server.js');
+var server = requirejs('js/server.js');
 var types = requirejs('js/types.js');
 
 app.get('/', function(req, res){
@@ -13,14 +13,20 @@ app.get('/', function(req, res){
 
 app.use('/', express.static('.'));
 
-io.on('connection', function(socket){
+io.on('connection', function(socket) {
     console.log('a user connected');
+    function onTick(data) {
+        socket.emit(types.eventTypes.tick, data);
+    }
 
+    var gameInstance;
     socket.on(types.eventTypes.startGame, function() {
-        game(function(data) {
-            socket.emit(types.eventTypes.tick, data);
-        });
+        gameInstance = server(onTick);
     })
+    socket.on(types.eventTypes.command, function(com) {
+        if(gameInstance)
+            gameInstance.command(com);
+    });
 });
 
 http.listen(3000, function(){

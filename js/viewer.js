@@ -113,7 +113,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
         renderer.domElement.id = rendererDivId;
         document.body.appendChild( renderer.domElement );
         
-        var ballRadius = 2;
+        var ballRadius = 3;
         var ballGeometry = new THREE.SphereGeometry(ballRadius, 32, 32);
         
         var playerRadius = 1;
@@ -233,7 +233,10 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
     socket.on(types.eventTypes.tick, function(packet) {
         v.serverTick(packet);
     });
-
+    setInterval(function() {
+        console.log('forward');
+        socket.emit(types.eventTypes.command, new types.moveCommand('0-0', {x:0,y:1,z:0}));
+    }, 1000);
     
     return v;
 });

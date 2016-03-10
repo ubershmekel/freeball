@@ -11,13 +11,18 @@ define([], function() {
         bodyTypes: bodyTypes,
         eventTypes: {
             startGame: "startGame",
-            tick: "tick"
+            tick: "tick",
+            command: "command"
         },
         player: function(teamI, playerI, radius) {
             this.teamI = teamI;
             this.playerI = playerI;
             this.radius = radius;
             this.type = bodyTypes.player;
+        },
+        moveCommand: function(playerId, moveVec) {
+            this.playerId = playerId;
+            this.moveVec = moveVec;
         }
     };
 });

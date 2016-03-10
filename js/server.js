@@ -31,38 +31,42 @@ define(function(require) {
         var msPerFrame = 1000.0 / ticksPerSecond;
         var sPerFrame = 1.0 / ticksPerSecond;
         var maxSubSteps = 3;
-        
-        console.log('start sim');
-        
-        var game = {};
-        game.id = generate_id();
-        
-        // Setup our world
+        var commands = {};
         var world = new CANNON.World();
-        game.newBodiesThisTick = [];
-        function newBody(body, typ) {
-            // notify the client something is added to the world
-            game.newBodiesThisTick.push(typ);
-            world.addBody(body);
-        };
-        game.world = world;
         world.gravity.set(0, 0, -9.82); // m/s²
-
         var physicsMaterial = new CANNON.Material("slipperyMaterial");
         var contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, { friction: 0.1, restitution: 0.8 });
         world.addContactMaterial(contactMaterial);
         
+        var game = {};
+        game.world = world;
+        game.id = generate_id();
+        var newBodiesThisTick = [];
+        
+        var newCommands = [];
+        game.command = function(command) {
+            newCommands.push(command);
+        };
+        
+        // Setup our world
+        function newBody(body, typ) {
+            // notify the client something is added to the world
+            newBodiesThisTick.push(typ);
+            world.addBody(body);
+        };
+        
         function createBall() {
-            var radius = 2; // m
+            var radius = 3; // m
             var sphereBody = new CANNON.Body({
                 mass: 2, // kg
-                position: new CANNON.Vec3(0, 0, 10), // m
+                position: new CANNON.Vec3(0, 0, 50), // m
                 shape: new CANNON.Sphere(radius),
                 material: physicsMaterial
             });
             newBody(sphereBody, {type: bodyTypes.ball});
         }
         
+        var playerBodies = {};
         function createPlayer(teamI, playerI) {
             // Create a sphere
             var radius = 1; // m
@@ -70,17 +74,20 @@ define(function(require) {
             var y = teamI * 100 - 50;
             var sphereBody = new CANNON.Body({
                 mass: 5, // kg
-                position: new CANNON.Vec3(x, y, 50), // m
+                position: new CANNON.Vec3(x, y, 5), // m
                 shape: new CANNON.Sphere(radius),
                 material: physicsMaterial
             });
+            var playerId = '' + teamI + '-' + playerI;
             var typeInfo = {
                 type: bodyTypes.player,
                 radius: radius,
                 teamI: teamI,
-                playerI: playerI
+                playerI: playerI,
+                id: playerId
             };
             newBody(sphereBody, typeInfo);
+            playerBodies[playerId] = sphereBody;
         }
         
         function createAllPlayers() {
@@ -106,10 +113,34 @@ define(function(require) {
 
         // Start the simulation loop
         var lastTime = new Date().getTime();
+        var tick = -1;
         function simloop() {
-            //requestAnimationFrame(simloop);
+            tick++;
             var time = new Date().getTime();
             var dt = (time - lastTime) / 1000;
+            
+            for(var i = 0; i < newCommands.length; i++) {
+                var com = newCommands[i];
+                try {
+                    var body = playerBodies[com.playerId];
+                    var vec = com.moveVec;
+                    // TODO: better error handling
+                    //console.log(vec);
+                    //console.log(body.velocity);
+                    //body.velocity.copy(vec);
+                    //body.velocity.normalize();
+                    //body.velocity = body.velocity.scale(100);
+                    body.force.copy(vec);
+                    body.force.normalize();
+                    body.force = body.force.scale(100);
+                    //console.log(body.velocity);
+                } catch(e) {
+                     console.warn('Bad command: ' + e);
+                }
+
+            }
+            newCommands = [];
+            
             //world.step(sPerFrame, dt, maxSubSteps);
             //world.step(sPerFrame);
             world.step(dt);
@@ -123,17 +154,19 @@ define(function(require) {
             }
             var state = {
                 p: positions,
-                v: velocities
+                v: velocities,
+                t: tick
             }
-            if(game.newBodiesThisTick.length > 0) {
-                state.n = game.newBodiesThisTick;
-                game.newBodiesThisTick = [];
+            if(newBodiesThisTick.length > 0) {
+                state.n = newBodiesThisTick;
+                newBodiesThisTick = [];
             }
             tickCallback(state);
             setTimeout(simloop, msPerFrame);
         };
 
         function main() {
+            console.log('start sim');
             createGround();
             createBall();
             createAllPlayers();
@@ -141,6 +174,7 @@ define(function(require) {
         }
         
         main();
+        return game;
     };
     
     return startGame;
