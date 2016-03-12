@@ -10,7 +10,9 @@ define([], function() {
     return {
         bodyTypes: bodyTypes,
         eventTypes: {
-            startGame: "startGame",
+            setPlayerId: "setPlayerId",
+            clientRequestGame: "clientRequestGame",
+            serverStartGame: "serverStartGame",
             tick: "tick",
             command: "command"
         },

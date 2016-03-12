@@ -1,7 +1,7 @@
 /* global requirejs */
 // client-side THREE.JS viewer of the game
 var v;
-requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballControls'], function(THREE, Stats, socketio, types, server) {
+requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallControls', 'TrackballControls'], function(THREE, Stats, socketio, types, server, BallControls) {
     var bodyTypes = types.bodyTypes;
     var socket = socketio();
     
@@ -61,13 +61,15 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
         //controls.addEventListener( 'change', renderer );
         return controls;
     }
+    
     var initScene = function() {
         var viewer = {};
         var objects = [];
         viewer.objects = objects;
         
         var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        camera.position.set(50, 50, 50)
+        camera.position.set(50, 50, 50);
+        //camera.lookAt(new THREE.Vector3([0,0,0]));
         
         viewer.camera = camera;
         viewer.audioListener = new THREE.AudioListener();
@@ -77,8 +79,20 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
         var scene = viewer.scene;
         scene.fog = new THREE.Fog( colors.skyBlue, 0, 500 );
 
-        viewer.controls = initControls(camera, renderer);
-        //scene.add( viewer.controls.getObject() );
+        var controls = initControls(camera, renderer);
+        scene.add(camera);
+        
+        //camera.position.set(30,0,0);
+        camera.up = new THREE.Vector3(0,0,1);
+        camera.lookAt(new THREE.Vector3(0,0,0));
+        //camera.lookAt({x: -0.7654980871707273, y: 0.563635924172992, z: -0.3103662623816727});
+
+        //scene.add( controls.object );
+        //scene.add( controls.getObject() );
+        //var controls = new BallControls.BallControls(camera);
+        //BallControls.requirePointerLock();
+        
+        
 
         scene.add( ambientLight );
 
@@ -174,7 +188,9 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
 
         
         viewer.update = function() {
-            v.controls.update()
+            //v.controls.update()
+            controls.update();
+            //controls.updateCommands();
             renderer.render( scene, camera );
         }
         
@@ -217,24 +233,29 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'TrackballCont
         return viewer;
     }
     
-    v = initScene();
-    
-    function animate() {
+    function main() {
+        v = initScene();
+        
+        function animate() {
+            requestAnimationFrame( animate );
+            v.update();
+        }
+        
         requestAnimationFrame( animate );
-        //controls.updateCommands();
-        v.update();
+
+        // To run the server locally:
+        //server(v.serverTick);
+        socket.emit(types.eventTypes.clientRequestGame);
+        
+        socket.on(types.eventTypes.serverStartGame, function(d) {console.log('serverStartGame', d); });
+        socket.on(types.eventTypes.tick, v.serverTick);
+        setInterval(function() {
+            console.log('forward');
+            socket.emit(types.eventTypes.command, new types.moveCommand('0-0', {x:0,y:1,z:0}));
+        }, 1000);
+        
+        return v;
     }
     
-    requestAnimationFrame( animate );
-
-    // To run the server locally:
-    //server(v.serverTick);
-    socket.emit(types.eventTypes.startGame);
-    socket.on(types.eventTypes.tick, v.serverTick);
-    setInterval(function() {
-        console.log('forward');
-        socket.emit(types.eventTypes.command, new types.moveCommand('0-0', {x:0,y:1,z:0}));
-    }, 1000);
-    
-    return v;
+    return main();
 });

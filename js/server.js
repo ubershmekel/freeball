@@ -3,7 +3,8 @@ if (typeof define !== 'function') { var define = require('amdefine')(module) }
 
 define(function(require) {
     var CANNON = require("cannon");
-    var bodyTypes = require("js/types").bodyTypes;
+    var types = require("js/types");
+    var bodyTypes = types.bodyTypes;
     
     var packetMembers = {
         position: "p",
@@ -26,7 +27,7 @@ define(function(require) {
         return [vec.x, vec.y, vec.z];
     }
     
-    var startGame = function(tickCallback) {
+    var startGame = function(eventCallback) {
         var ticksPerSecond = 50;
         var msPerFrame = 1000.0 / ticksPerSecond;
         var sPerFrame = 1.0 / ticksPerSecond;
@@ -151,8 +152,8 @@ define(function(require) {
                 state.n = newBodiesThisTick;
                 newBodiesThisTick = [];
             }
-            tickCallback(state);
-        }
+            eventCallback(types.eventTypes.tick, state);
+        };
 
         // Start the simulation loop
         var lastTime = new Date().getTime();
@@ -173,18 +174,25 @@ define(function(require) {
             reportState();
             setTimeout(simloop, msPerFrame);
         };
+        
+        function notifyPlayersGameStarted() {
+            eventCallback(types.eventTypes.serverStartGame);
+        }
 
         function main() {
             console.log('start sim');
             createGround();
             createBall();
             createAllPlayers();
+            notifyPlayersGameStarted();
             setTimeout(simloop, msPerFrame);
         }
         
         main();
         return game;
     };
+    
+    startGame.generate_id = generate_id;
     
     return startGame;
 });
