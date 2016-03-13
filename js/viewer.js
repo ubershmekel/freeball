@@ -47,23 +47,23 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
         v.camera.aspect = window.innerWidth / window.innerHeight;
         v.camera.updateProjectionMatrix();
         v.renderer.setSize( window.innerWidth, window.innerHeight );
-    }    
-    window.addEventListener( 'resize', onWindowResize, false );
+    };
     
     var initControls = function(camera, renderer) {
-        var controls = new THREE.TrackballControls( camera );
-        controls.rotateSpeed = 4.0;
-        controls.zoomSpeed = 2.0;
-        controls.panSpeed = 2.0;
-        controls.noZoom = false;
-        controls.noPan = false;
-        controls.staticMoving = true;
-        controls.dynamicDampingFactor = 0.3;
-        controls.keys = [ 65, 83, 68 ];
+        var trackBall = new THREE.TrackballControls( camera );
+        trackBall.rotateSpeed = 4.0;
+        trackBall.zoomSpeed = 2.0;
+        trackBall.panSpeed = 2.0;
+        trackBall.noZoom = false;
+        trackBall.noPan = false;
+        trackBall.staticMoving = true;
+        trackBall.dynamicDampingFactor = 0.3;
+        trackBall.keys = [ 65, 83, 68 ];
         //controls.addEventListener( 'change', renderer );
-        return controls;
+        return trackBall;
     }
     
+    var controls;
     var initScene = function() {
         var viewer = {};
         var objects = [];
@@ -82,7 +82,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
         var scene = viewer.scene;
         scene.fog = new THREE.Fog( colors.skyBlue, 0, 500 );
 
-        var controls = initControls(camera, renderer);
+        controls = initControls(camera, renderer);
         scene.add(camera);
         
         //camera.position.set(30,0,0);
@@ -209,9 +209,10 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
                 obj.position.set(vec[0], vec[1], vec[2]);
                 //obj.velocity = packet.v[i] 
             }
-            console.log(focusPlayer);
+            //console.log(focusPlayer);
             camera.position.copy(playerMeshes[focusPlayer].position);
-            camera.position.setX(camera.position.x + 10);
+            camera.position.setY(camera.position.y + 1.1);
+            camera.position.setZ(camera.position.z + 2);
         }
         
         function newObjects(objList) {
@@ -232,6 +233,8 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
                         console.warn("Unhandled object type: " + newObj);
                 }
             }
+            
+            controls.target.copy(playerMeshes[focusPlayer].position);
         }
         
         viewer.serverTick = function(packet) {
@@ -245,12 +248,23 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
             }
         }
         
+        viewer.onStartGame = function(playerIdsArray) {
+            focusPlayer = playerIdsArray.indexOf(thisPlayerId);
+            console.log('serverStartGame', playerIdsArray, focusPlayer);
+        };
+        
+        viewer.onSetPlayerId = function(playerId) {
+            thisPlayerId = playerId;
+            console.log("I am", playerId);
+        };
+        
         return viewer;
     }
     
     function main() {
         v = initScene();
-        
+        window.addEventListener( 'resize', onWindowResize, false );
+
         function animate() {
             requestAnimationFrame( animate );
             v.update();
@@ -262,15 +276,10 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
         //server(v.serverTick);
         socket.emit(types.eventTypes.clientRequestGame);
         
-        socket.on(types.eventTypes.setPlayerId, function(playerId) {
-            thisPlayerId = playerId;
-            console.log("I am", playerId);
-        });
-        socket.on(types.eventTypes.serverStartGame, function(playerIds) {
-            focusPlayer = playerIds.indexOf(thisPlayerId);
-            console.log('serverStartGame', playerIds, focusPlayer);
-        });
+        socket.on(types.eventTypes.setPlayerId, v.onSetPlayerId);
+        socket.on(types.eventTypes.serverStartGame, v.onStartGame);
         socket.on(types.eventTypes.tick, v.serverTick);
+        
         setInterval(function() {
             console.log('forward');
             socket.emit(types.eventTypes.command, new types.moveCommand({x:0,y:1,z:0}));
