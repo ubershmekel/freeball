@@ -27,7 +27,7 @@ define(function(require) {
         return [vec.x, vec.y, vec.z];
     }
     
-    var startGame = function(eventCallback) {
+    var startGame = function(eventCallback, playersArray) {
         var ticksPerSecond = 50;
         var msPerFrame = 1000.0 / ticksPerSecond;
         var sPerFrame = 1.0 / ticksPerSecond;
@@ -176,7 +176,8 @@ define(function(require) {
         };
         
         function notifyPlayersGameStarted() {
-            eventCallback(types.eventTypes.serverStartGame);
+            var playerIds = playersArray.map(function(value) { return value.id });
+            eventCallback(types.eventTypes.serverStartGame, playerIds);
         }
 
         function main() {

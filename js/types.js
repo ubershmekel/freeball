@@ -22,9 +22,9 @@ define([], function() {
             this.radius = radius;
             this.type = bodyTypes.player;
         },
-        moveCommand: function(playerId, moveVec) {
-            this.playerId = playerId;
+        moveCommand: function(moveVec, playerId) {
             this.moveVec = moveVec;
+            this.playerId = playerId;
         }
     };
 });

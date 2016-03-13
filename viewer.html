@@ -1,5 +1,18 @@
 <html>
     <head>
+        <title>Free Ball</title>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/themes/flatty.css" />
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/humane.js"></script>
+        <script>
+            window.onerror = function(msg, url, linenumber) {
+                // Tell users when errors occur
+                // http://stackoverflow.com/questions/2604976/javascript-how-to-display-script-errors-in-a-popup-alert/2604997#2604997
+                humane.log("An error: " + msg, {timeout: 3500, addnCls: "humane-flatty-error"});
+
+                // `false` to report on dev console too
+                return false;
+            };
+        </script>
     </head>
     <body>
         <link rel="stylesheet" type="text/css" href="css/style.css">

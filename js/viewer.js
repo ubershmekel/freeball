@@ -4,6 +4,8 @@ var v;
 requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallControls', 'TrackballControls'], function(THREE, Stats, socketio, types, server, BallControls) {
     var bodyTypes = types.bodyTypes;
     var socket = socketio();
+    var thisPlayerId = null;
+    var focusPlayer = 0;
     
     var rendererDivId = "renderer";
     var colors = {};
@@ -65,6 +67,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
     var initScene = function() {
         var viewer = {};
         var objects = [];
+        var playerMeshes = [];
         viewer.objects = objects;
         
         var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -148,6 +151,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
             ballMesh.castShadow = true;
             ballMesh.receiveShadow = true;
             ballMesh.position.set(0, 0, 0); 
+            playerMeshes.push(ballMesh);
             addBodyToScene(ballMesh, bodyTypes.player);
         };
 
@@ -194,39 +198,50 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
             renderer.render( scene, camera );
         }
         
+        function updatePositions(positions) {
+            //console.log(packet.p);
+            if(positions.length != objects.length)
+                console.warn("Simulation and viewer object count desynced", positions.length, objects.length);
+            for(var i = 0; i < objects.length; i++) {
+                var obj = objects[i].mesh;
+                //obj.position.copy(packet.p[i]);
+                var vec = positions[i];
+                obj.position.set(vec[0], vec[1], vec[2]);
+                //obj.velocity = packet.v[i] 
+            }
+            console.log(focusPlayer);
+            camera.position.copy(playerMeshes[focusPlayer].position);
+            camera.position.setX(camera.position.x + 10);
+        }
+        
+        function newObjects(objList) {
+            // make new objects
+            for(var i = 0; i < objList.length; i++) {
+                var newObj = objList[i];
+                switch(newObj.type) {
+                    case bodyTypes.ball:
+                        createBall(newObj);
+                        break;
+                    case bodyTypes.player:
+                        createPlayer(newObj);
+                        break;
+                    case bodyTypes.ground:
+                        createPlane(newObj);
+                        break;
+                    default:
+                        console.warn("Unhandled object type: " + newObj);
+                }
+            }
+        }
+        
         viewer.serverTick = function(packet) {
             stats.update();
             //console.log(packet);
             if(packet.n) {
-                // make new object
-                for(var i = 0; i < packet.n.length; i++) {
-                    var newObj = packet.n[i];
-                    switch(newObj.type) {
-                        case bodyTypes.ball:
-                            createBall(newObj);
-                            break;
-                        case bodyTypes.player:
-                            createPlayer(newObj);
-                            break;
-                        case bodyTypes.ground:
-                            createPlane(newObj);
-                            break;
-                        default:
-                            console.warn("Unhandled object type: " + newObj);
-                    }
-                }
+                newObjects(packet.n);
             }
             if(packet.p) {
-                //console.log(packet.p);
-                if(packet.p.length != objects.length)
-                    console.warn("Simulation and viewer object count desynced", packet.p.length, objects.length);
-                for(var i = 0; i < objects.length; i++) {
-                    var obj = objects[i].mesh;
-                    //obj.position.copy(packet.p[i]);
-                    var vec = packet.p[i];
-                    obj.position.set(vec[0], vec[1], vec[2]);
-                    //obj.velocity = packet.v[i] 
-                }
+                updatePositions(packet.p);
             }
         }
         
@@ -239,7 +254,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
         function animate() {
             requestAnimationFrame( animate );
             v.update();
-        }
+        };
         
         requestAnimationFrame( animate );
 
@@ -247,11 +262,18 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
         //server(v.serverTick);
         socket.emit(types.eventTypes.clientRequestGame);
         
-        socket.on(types.eventTypes.serverStartGame, function(d) {console.log('serverStartGame', d); });
+        socket.on(types.eventTypes.setPlayerId, function(playerId) {
+            thisPlayerId = playerId;
+            console.log("I am", playerId);
+        });
+        socket.on(types.eventTypes.serverStartGame, function(playerIds) {
+            focusPlayer = playerIds.indexOf(thisPlayerId);
+            console.log('serverStartGame', playerIds, focusPlayer);
+        });
         socket.on(types.eventTypes.tick, v.serverTick);
         setInterval(function() {
             console.log('forward');
-            socket.emit(types.eventTypes.command, new types.moveCommand('0-0', {x:0,y:1,z:0}));
+            socket.emit(types.eventTypes.command, new types.moveCommand({x:0,y:1,z:0}));
         }, 1000);
         
         return v;

@@ -8,41 +8,61 @@ define(function(require) {
     var matchmaker = {};
     var games = [];
     var playersQueue = [];
+    function tryCreateMatch() {
+        var i = 0;
+        var playersPerGame = 2;
+        while(i < playersPerGame && i < playersQueue.length) {
+            // TODO: this feels a bit needlessly complicated
+            if (!playersQueue[i].socket.connected) {
+                playersQueue.splice(i, 1);
+                console.log('Kicked disconnected player');
+                continue;
+            }
+            i++;
+        }
+        if(i == playersPerGame) {
+            console.log("starting game");
+            var gamePlayers = [];
+            gamePlayers.push(playersQueue.shift());
+            gamePlayers.push(playersQueue.shift());
+            gamePlayers[0].team = 0;
+            gamePlayers[1].team = 1;
+
+            function onEvent(eventName, data) {
+                gamePlayers[0].socket.emit(eventName, data);
+                gamePlayers[1].socket.emit(eventName, data);
+            }
+
+            var gameInstance = server(onEvent, gamePlayers);
+            
+            games.push(gameInstance);
+        }
+    };
     matchmaker.init = function(http) {
         var io = require('socket.io')(http);
         io.on('connection', function(socket) {
             var player = {
                 id: server.generate_id(),
                 socket: socket,
-                game: null
+                game: null,
+                team: null
             };
-            
+
             socket.emit(types.eventTypes.setPlayerId, player.id);
             
             console.log('a user connected: ' + player.id);
             var gameInstance = null;
+            
             socket.on(types.eventTypes.clientRequestGame, function() {
-                if(playersQueue.length >= 1) {
-                    console.log("starting game");
-                    var player_2 = playersQueue.shift();
-                    function onEvent(eventName, data) {
-                        socket.emit(eventName, data);
-                        player_2.socket.emit(eventName, data);
-                    }
-
-                    var gameInstance = server(onEvent);
-                    
-                    player.game = gameInstance;
-                    player_2.game = gameInstance;
-                    games.push(gameInstance);
-                } else {
-                    playersQueue.push(player);
-                }
+                playersQueue.push(player);
+                tryCreateMatch();
             });
             
             socket.on(types.eventTypes.command, function(com) {
-                if(gameInstance !== null)
+                if(gameInstance !== null) {
+                    com.playerId = player.id;
                     gameInstance.command(com);
+                }
             });
         });
     };
