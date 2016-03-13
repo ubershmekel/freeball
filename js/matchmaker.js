@@ -8,6 +8,7 @@ define(function(require) {
     var matchmaker = {};
     var games = [];
     var playersQueue = [];
+    
     function tryCreateMatch() {
         var i = 0;
         var playersPerGame = 2;
@@ -34,10 +35,13 @@ define(function(require) {
             }
 
             var gameInstance = server(onEvent, gamePlayers);
-            
+            gamePlayers.map(function(playa) {
+                playa.game = gameInstance;
+            });
             games.push(gameInstance);
         }
     };
+    
     matchmaker.init = function(http) {
         var io = require('socket.io')(http);
         io.on('connection', function(socket) {
@@ -51,7 +55,6 @@ define(function(require) {
             socket.emit(types.eventTypes.setPlayerId, player.id);
             
             console.log('a user connected: ' + player.id);
-            var gameInstance = null;
             
             socket.on(types.eventTypes.clientRequestGame, function() {
                 playersQueue.push(player);
@@ -59,9 +62,9 @@ define(function(require) {
             });
             
             socket.on(types.eventTypes.command, function(com) {
-                if(gameInstance !== null) {
+                if(player.game !== null) {
                     com.playerId = player.id;
-                    gameInstance.command(com);
+                    player.game.command(com);
                 }
             });
         });

@@ -68,37 +68,40 @@ define(function(require) {
         }
         
         var playerBodies = {};
-        function createPlayer(teamI, playerI) {
             // Create a sphere
+        function createPlayer(player) {
             var radius = 1; // m
-            var x = playerI * 10;
-            var y = teamI * 100 - 50;
+            var x = 0; //playerI * 10;
+            var y = player.team * 100 - 50;
             var sphereBody = new CANNON.Body({
                 mass: 5, // kg
                 position: new CANNON.Vec3(x, y, 5), // m
                 shape: new CANNON.Sphere(radius),
                 material: physicsMaterial
             });
-            var playerId = '' + teamI + '-' + playerI;
+            //var playerId = '' + teamI + '-' + playerI;
             var typeInfo = {
                 type: bodyTypes.player,
                 radius: radius,
-                teamI: teamI,
-                playerI: playerI,
-                id: playerId
+                teamI: player.team,
+                //playerI: playerI,
+                id: player.id
             };
             newBody(sphereBody, typeInfo);
-            playerBodies[playerId] = sphereBody;
+            playerBodies[player.id] = sphereBody;
         }
         
         function createAllPlayers() {
-            var teamSizes = [1, 1];
+            playersArray.map(function(playa) {
+                createPlayer(playa);
+            });
+            /*var teamSizes = [1, 1];
             for(var teamI = 0; teamI < teamSizes.length; teamI++) {
                 var playerCount = teamSizes[teamI];
                 for(var playerI = 0; playerI < playerCount; playerI++) {
                     createPlayer(teamI, playerI);
                 }
-            }
+            }*/
         };
         
         function createGround() {
@@ -117,6 +120,7 @@ define(function(require) {
                 var com = newCommands[i];
                 try {
                     var body = playerBodies[com.playerId];
+                    //console.log(body);
                     var vec = com.moveVec;
                     // TODO: better error handling
                     //console.log(vec);
