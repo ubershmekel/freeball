@@ -1,11 +1,13 @@
 /* global requirejs */
 // client-side THREE.JS viewer of the game
 var v;
-requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallControls', 'TrackballControls'], function(THREE, Stats, socketio, types, server, BallControls) {
+requirejs(
+       ['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/keyboardCommands', 'js/BallControls', 'TrackballControls'], 
+function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands,         BallControls) {
     var bodyTypes = types.bodyTypes;
-    var socket = socketio();
+    var socket;
     var thisPlayerId = null;
-    var focusPlayer = 0;
+    var focusPlayer = null;
     
     var rendererDivId = "renderer";
     var colors = {};
@@ -211,7 +213,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
             }
             //console.log(focusPlayer);
             camera.position.copy(playerMeshes[focusPlayer].position);
-            camera.position.setY(camera.position.y + 1.1);
+            camera.position.setY(camera.position.y*1.1);
             camera.position.setZ(camera.position.z + 2);
         }
         
@@ -236,6 +238,36 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
             
             controls.target.copy(playerMeshes[focusPlayer].position);
         }
+        var noMove = new THREE.Vector3(0, 0, 0);
+        function sendCommands() {
+            var commands = keyboardCommands.update();
+            //console.log(commands);
+            var moveVector = noMove.clone();
+            var forward = camera.getWorldDirection();
+            var up = camera.up;
+            var left = up.cross(forward);
+            if (commands[keyboardCommands.names.forward]) {
+                moveVector.add(forwad.setLength(1));
+            }
+            if (commands[keyboardCommands.names.back]) {
+                moveVector.add(forward.setLength(-1));
+            }
+            if (commands[keyboardCommands.names.left]) {
+                moveVector.add(left.setLength(1));
+            }
+            if (commands[keyboardCommands.names.right]) {
+                moveVector.add(left.setLength(-1));
+            }
+            if (commands[keyboardCommands.names.fly]) {
+                moveVector.add(up.setLength(1));
+            }
+            
+            if (!moveVector.equals(noMove)) {
+                socket.emit(types.eventTypes.command, new types.moveCommand(moveVector));
+                //console.log(moveVector);
+            }
+
+        }
         
         viewer.serverTick = function(packet) {
             stats.update();
@@ -246,6 +278,7 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
             if(packet.p) {
                 updatePositions(packet.p);
             }
+            sendCommands();
         }
         
         viewer.onStartGame = function(playerIdsArray) {
@@ -272,18 +305,19 @@ requirejs(['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/BallContro
         
         requestAnimationFrame( animate );
 
+        socket = socketio();
         // To run the server locally:
         //server(v.serverTick);
         socket.emit(types.eventTypes.clientRequestGame);
-        
         socket.on(types.eventTypes.setPlayerId, v.onSetPlayerId);
         socket.on(types.eventTypes.serverStartGame, v.onStartGame);
         socket.on(types.eventTypes.tick, v.serverTick);
         
-        setInterval(function() {
-            console.log('forward');
-            socket.emit(types.eventTypes.command, new types.moveCommand({x:0,y:1,z:0}));
-        }, 1000);
+        //setInterval(function() {
+            // TODO: delete his
+        //    console.log('forward');
+        //    socket.emit(types.eventTypes.command, new types.moveCommand({x:0,y:1,z:0}));
+        //}, 1000);
         
         return v;
     }

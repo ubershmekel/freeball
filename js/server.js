@@ -119,23 +119,26 @@ define(function(require) {
             for(var i = 0; i < newCommands.length; i++) {
                 var com = newCommands[i];
                 try {
-                    var body = playerBodies[com.playerId];
                     //console.log(body);
-                    var vec = com.moveVec;
                     // TODO: better error handling
                     //console.log(vec);
                     //console.log(body.velocity);
-                    //body.velocity.copy(vec);
+                    //body.velocity.copy(com.moveVec);
                     //body.velocity.normalize();
                     //body.velocity = body.velocity.scale(100);
-                    body.force.copy(vec);
-                    body.force.normalize();
-                    body.force = body.force.scale(100);
-                    //console.log(body.velocity);
+                    var body = playerBodies[com.playerId];
+                    //var modify = body.force;
+                    var modify = body.velocity;
+                    //body.velocity.copy(com.moveVec);
+                    var v = com.moveVec;
+                    body.velocity.set(v.x, v.y, v.z);
+                    body.velocity.normalize();
+                    body.velocity = body.velocity.scale(15);
+                    //body.velocity = body.force.scale(100);
+                    console.log(body.velocity);
                 } catch(e) {
                      console.warn('Bad command: ' + e);
                 }
-
             }
             newCommands = [];
         }
