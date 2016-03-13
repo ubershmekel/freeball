@@ -245,9 +245,9 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             var moveVector = noMove.clone();
             var forward = camera.getWorldDirection();
             var up = camera.up;
-            var left = up.cross(forward);
+            var left = up.clone().cross(forward);
             if (commands[keyboardCommands.names.forward]) {
-                moveVector.add(forwad.setLength(1));
+                moveVector.add(forward.setLength(1));
             }
             if (commands[keyboardCommands.names.back]) {
                 moveVector.add(forward.setLength(-1));

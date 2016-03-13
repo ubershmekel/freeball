@@ -135,7 +135,7 @@ define(function(require) {
                     body.velocity.normalize();
                     body.velocity = body.velocity.scale(15);
                     //body.velocity = body.force.scale(100);
-                    console.log(body.velocity);
+                    //console.log(body.velocity);
                 } catch(e) {
                      console.warn('Bad command: ' + e);
                 }
