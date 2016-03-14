@@ -61,7 +61,7 @@ define(function(require) {
             var radius = 3; // m
             var sphereBody = new CANNON.Body({
                 mass: 2, // kg
-                position: new CANNON.Vec3(0, 0, 50), // m
+                position: new CANNON.Vec3(0, 0, 25), // m
                 shape: new CANNON.Sphere(radius),
                 material: physicsMaterial
             });
@@ -106,14 +106,22 @@ define(function(require) {
         };
         
         function createGround() {
-            var groundBody = new CANNON.Body({
-                mass: 0, // mass == 0 makes the body static
-                material: physicsMaterial
-            });
+            var planes = [
+                [0, 0, 0]
+                //[0, 0, 1000] // Why does this break the game?
+            ];
             var groundShape = new CANNON.Plane();
-            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), -Math.PI/2);
-            groundBody.addShape(groundShape);
-            newBody(groundBody, {type: bodyTypes.ground});
+            planes.forEach(function(planeLoc) {
+                var groundBody = new CANNON.Body({
+                    mass: 0, // mass == 0 makes the body static
+                    material: physicsMaterial
+                });
+                groundBody.position.set(planeLoc[0], planeLoc[1], planeLoc[2]);
+                console.log(groundBody.position)
+                groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), -Math.PI/2);
+                groundBody.addShape(groundShape);
+                newBody(groundBody, {type: bodyTypes.ground});
+            })
         };
 
         function handleCommands() {
