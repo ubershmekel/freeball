@@ -34,7 +34,8 @@ define(function(require) {
         var maxSubSteps = 3;
         var commands = {};
         var world = new CANNON.World();
-        world.gravity.set(0, 0, -9.82); // m/s²
+        // TODO: Why does normal `g` not work here? It looks sluggish... 
+        world.gravity.set(0, 0, -19.82); // m/s²
         var physicsMaterial = new CANNON.Material("slipperyMaterial");
         var contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, { friction: 0.1, restitution: 0.8 });
         world.addContactMaterial(contactMaterial);
@@ -163,20 +164,20 @@ define(function(require) {
         };
 
         // Start the simulation loop
-        var lastTime = new Date().getTime();
+        var lastTimeMs = new Date().getTime();
         var tick = -1;
         function simloop() {
             tick++;
-            var time = new Date().getTime();
-            var dt = (time - lastTime) / 1000;
+            var timeMs = new Date().getTime();
+            var dtSeconds = (timeMs - lastTimeMs) / 1000;
             
             handleCommands();
             
-            //world.step(sPerFrame, dt, maxSubSteps);
+            //world.step(sPerFrame, dtSeconds, maxSubSteps);
             //world.step(sPerFrame);
-            world.step(dt);
+            world.step(dtSeconds);
             //console.log("Sphere z position: " + sphereBody.position.z);
-            lastTime = time;
+            lastTimeMs = timeMs;
             
             reportState();
             setTimeout(simloop, msPerFrame);

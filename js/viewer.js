@@ -73,7 +73,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         viewer.objects = objects;
         
         var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        camera.position.set(50, 50, 50);
+        //camera.position.set(1, 1, 1);
         //camera.lookAt(new THREE.Vector3([0,0,0]));
         
         viewer.camera = camera;
@@ -212,9 +212,6 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
                 //obj.velocity = packet.v[i] 
             }
             //console.log(focusPlayer);
-            camera.position.copy(playerMeshes[focusPlayer].position);
-            camera.position.setY(camera.position.y*1.1);
-            camera.position.setZ(camera.position.z + 2);
         }
         
         function newObjects(objList) {
@@ -235,9 +232,8 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
                         console.warn("Unhandled object type: " + newObj);
                 }
             }
-            
-            controls.target.copy(playerMeshes[focusPlayer].position);
         }
+        
         var noMove = new THREE.Vector3(0, 0, 0);
         function sendCommands() {
             var commands = keyboardCommands.update();
@@ -269,6 +265,21 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
 
         }
         
+        function fixCameraOnStart(packet) {
+            //controls.target.copy(playerMeshes[focusPlayer].position);
+            //controls.target = playerMeshes[focusPlayer].position;
+            //camera.position.copy(playerMeshes[focusPlayer].position);
+            var outside = 5;
+            if(playerMeshes[focusPlayer].position.y < 0)
+                outside = -outside;
+            camera.position.setY(outside);
+            camera.position.setZ(1);
+            console.log(camera.position);
+            //camera.position.setY(camera.position.y + 2);
+            //camera.position.setZ(camera.position.z + 1);
+            playerMeshes[focusPlayer].add(camera);
+        }
+        
         viewer.serverTick = function(packet) {
             stats.update();
             //console.log(packet);
@@ -279,6 +290,10 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
                 updatePositions(packet.p);
             }
             sendCommands();
+            if(packet.n) {
+                // TODO: make this less ugly in some "game events/startup" function
+                fixCameraOnStart();
+            }
         }
         
         viewer.onStartGame = function(playerIdsArray) {

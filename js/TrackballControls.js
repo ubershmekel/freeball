@@ -353,6 +353,8 @@ THREE.TrackballControls = function ( object, domElement ) {
     // listeners
 
     function keydown( event ) {
+        return;
+        // TODO: erase this keyboard stuff
 
         if ( _this.enabled === false ) return;
 
