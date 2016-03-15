@@ -53,7 +53,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
     
     var initControls = function(camera, renderer) {
         var trackBall = new THREE.TrackballControls( camera );
-        trackBall.rotateSpeed = 4.0;
+        trackBall.rotateSpeed = 5.0;
         trackBall.zoomSpeed = 2.0;
         trackBall.panSpeed = 2.0;
         trackBall.noZoom = false;
@@ -85,6 +85,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         scene.fog = new THREE.Fog( colors.skyBlue, 0, 500 );
 
         controls = initControls(camera, renderer);
+        viewer.controls = controls;
         scene.add(camera);
         
         //camera.position.set(30,0,0);
@@ -132,9 +133,6 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         renderer.domElement.id = rendererDivId;
         document.body.appendChild( renderer.domElement );
         
-        var ballRadius = 3;
-        var ballGeometry = new THREE.SphereGeometry(ballRadius, 32, 32);
-        
         var playerRadius = 1;
         var playerGeometry = new THREE.SphereGeometry(playerRadius, 32, 32);
         
@@ -158,6 +156,8 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         };
 
         function createBall (typeInfo) {
+            var ballRadius = typeInfo.radius;
+            var ballGeometry = new THREE.SphereGeometry(ballRadius, 32, 32);
             var ballMesh = new THREE.Mesh( ballGeometry, yellowMaterial );
             ballMesh.castShadow = true;
             ballMesh.receiveShadow = true;
@@ -168,7 +168,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         
         function createPlane(typeInfo) {
             // floor
-            var planeGeometry = new THREE.PlaneGeometry( 100, 400, 50, 50 );
+            var planeGeometry = new THREE.PlaneGeometry( 50, 400, 50, 50 );
             planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationFromQuaternion(typeInfo.quaternion) );
 
             var material = new THREE.MeshLambertMaterial( {
@@ -242,7 +242,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             //console.log(commands);
             var moveVector = noMove.clone();
             var forward = camera.getWorldDirection();
-            var up = camera.up;
+            var up = camera.up.clone();
             var left = up.clone().cross(forward);
             if (commands[keyboardCommands.names.forward]) {
                 moveVector.add(forward.setLength(1));
@@ -259,6 +259,9 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             if (commands[keyboardCommands.names.fly]) {
                 moveVector.add(up.setLength(1));
             }
+            if (commands[keyboardCommands.names.dive]) {
+                moveVector.add(up.setLength(-1));
+            }
             
             if (!moveVector.equals(noMove)) {
                 socket.emit(types.eventTypes.command, new types.moveCommand(moveVector));
@@ -271,11 +274,11 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             //controls.target.copy(playerMeshes[focusPlayer].position);
             //controls.target = playerMeshes[focusPlayer].position;
             //camera.position.copy(playerMeshes[focusPlayer].position);
-            var outside = 5;
+            var outside = 7;
             if(playerMeshes[focusPlayer].position.y < 0)
                 outside = -outside;
             camera.position.setY(outside);
-            camera.position.setZ(1);
+            camera.position.setZ(2);
             console.log(camera.position);
             //camera.position.setY(camera.position.y + 2);
             //camera.position.setZ(camera.position.z + 1);

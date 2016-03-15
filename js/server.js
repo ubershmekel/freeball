@@ -58,14 +58,17 @@ define(function(require) {
         };
         
         function createBall() {
-            var radius = 3; // m
+            var radius = 4; // m
             var sphereBody = new CANNON.Body({
                 mass: 2, // kg
                 position: new CANNON.Vec3(0, 0, 25), // m
                 shape: new CANNON.Sphere(radius),
                 material: physicsMaterial
             });
-            newBody(sphereBody, {type: bodyTypes.ball});
+            newBody(sphereBody, {
+                type: bodyTypes.ball,
+                radius: radius
+            });
         }
         
         var playerBodies = {};
@@ -117,10 +120,13 @@ define(function(require) {
             var z = new CANNON.Vec3(0,0,1);
             
             var planes = [
+                // floor
                 {
                     pos: [0, 0, 0],
                     quat: [z, 0]
                 },
+                
+                // end of field walls
                 {    
                     pos: [0, 200, 0],
                     quat: [x, Math.PI / 2]
@@ -129,20 +135,24 @@ define(function(require) {
                     pos: [0, -200, 0],
                     quat: [x, -Math.PI / 2]
                 },
+                
+                // angled roof
                 {    
-                    pos: [-20, 0, 60],
+                    pos: [-20, 0, 40],
                     quat: [y, -Math.PI * 5 / 4]
                 },
                 {    
-                    pos: [20, 0, 60],
+                    pos: [20, 0, 40],
                     quat: [y, Math.PI * 5 / 4]
                 },
-                {    
-                    pos: [20, 0, 0],
+                
+                // angled bottom floor
+                {
+                    pos: [40, 0, 20],
                     quat: [y, -Math.PI / 4]
                 },
                 {    
-                    pos: [-20, 0, 0],
+                    pos: [-40, 0, 20],
                     quat: [y, Math.PI / 4]
                 }
             ];
@@ -183,9 +193,16 @@ define(function(require) {
                     var modify = body.velocity;
                     //body.velocity.copy(com.moveVec);
                     var v = com.moveVec;
+                    body.force.set(v.x, v.y, v.z);
+                    body.force.normalize();
+                    body.force = body.force.scale(300);
+
+                    /*
+                    var v = com.moveVec;
                     body.velocity.set(v.x, v.y, v.z);
                     body.velocity.normalize();
                     body.velocity = body.velocity.scale(15);
+                    */
                     //body.velocity = body.force.scale(100);
                     //console.log(body.velocity);
                 } catch(e) {

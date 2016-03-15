@@ -423,7 +423,10 @@ THREE.TrackballControls = function ( object, domElement ) {
     }
 
     function mousemove( event ) {
+        // TODO: make this all more elegant
+        _state = STATE.ROTATE;
 
+        
         if ( _this.enabled === false ) return;
 
         if ( _state === STATE.ROTATE && ! _this.noRotate ) {
@@ -584,7 +587,10 @@ THREE.TrackballControls = function ( object, domElement ) {
     };
 
     this.domElement.addEventListener( 'contextmenu', contextmenu, false );
-    this.domElement.addEventListener( 'mousedown', mousedown, false );
+    // TODO: clean up here
+    //this.domElement.addEventListener( 'mousedown', mousedown, false );
+            document.addEventListener( 'mousemove', mousemove, false );
+
     this.domElement.addEventListener( 'mousewheel', mousewheel, false );
     this.domElement.addEventListener( 'MozMousePixelScroll', mousewheel, false ); // firefox
 

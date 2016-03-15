@@ -13,7 +13,8 @@ define(['js/keyboard'], function(keyboard) {
         left: 'left',
         right: 'right',
         fly: 'fly',
-        look: 'look'
+        look: 'look',
+        dive: 'dive'
     };
     
     binds[keyboard.keyCodes.up] =    names.forward;
@@ -25,6 +26,8 @@ define(['js/keyboard'], function(keyboard) {
     binds[keyboard.keyCodes.right] = names.right;
     binds[keyboard.keyCodes.d] =     names.right;
     binds[keyboard.keyCodes.space] = names.fly;
+    binds[keyboard.keyCodes.e] =     names.fly;
+    binds[keyboard.keyCodes.q] =     names.dive;
     
     var update = function() {
         var commandsCalled = {};
