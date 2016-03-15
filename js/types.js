@@ -14,7 +14,8 @@ define([], function() {
             clientRequestGame: "clientRequestGame",
             serverStartGame: "serverStartGame",
             tick: "tick",
-            command: "command"
+            command: "command",
+            toast: "toast"
         },
         player: function(teamI, playerI, radius) {
             this.teamI = teamI;

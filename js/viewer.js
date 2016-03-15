@@ -168,11 +168,13 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         
         function createPlane(typeInfo) {
             // floor
-            var planeGeometry = new THREE.PlaneGeometry( 400, 200, 50, 50 );
-            planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationZ( - Math.PI / 2 ) );
+            var planeGeometry = new THREE.PlaneGeometry( 100, 400, 50, 50 );
+            planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationFromQuaternion(typeInfo.quaternion) );
 
             var material = new THREE.MeshLambertMaterial( {
                 color: colors.green,
+                wireframe: true,
+                //wireframeLinewidth does not work on windows: wireframeLinewidth: 2.0
                 //map: earthTexture
             });
 
@@ -326,8 +328,18 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         socket.emit(types.eventTypes.clientRequestGame);
         socket.on(types.eventTypes.setPlayerId, v.onSetPlayerId);
         socket.on(types.eventTypes.serverStartGame, v.onStartGame);
+        socket.on('error', function(e) {
+            // TODO: check if this works somehow
+            humane.error(e);
+        });
+        socket.on(types.eventTypes.toast, function(line) {
+            // NOTE: we don't pass `humane.log`
+            // as the callback because it ruins `this` and 
+            // you get an undefined queue error.
+            humane.log(line);
+        });
         socket.on(types.eventTypes.tick, v.serverTick);
-        
+
         //setInterval(function() {
             // TODO: delete his
         //    console.log('forward');

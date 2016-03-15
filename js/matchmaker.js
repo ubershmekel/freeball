@@ -39,7 +39,10 @@ define(function(require) {
                 playa.game = gameInstance;
             });
             games.push(gameInstance);
+            return true;
         }
+        
+        return false;
     };
     
     matchmaker.init = function(http) {
@@ -58,7 +61,9 @@ define(function(require) {
             
             socket.on(types.eventTypes.clientRequestGame, function() {
                 playersQueue.push(player);
-                tryCreateMatch();
+                var created = tryCreateMatch();
+                if(!created)
+                    socket.emit(types.eventTypes.toast, "Waiting for another player");
             });
             
             socket.on(types.eventTypes.command, function(com) {

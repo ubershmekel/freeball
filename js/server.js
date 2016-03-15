@@ -106,23 +106,66 @@ define(function(require) {
         };
         
         function createGround() {
+            // From: https://github.com/schteppe/cannon.js/blob/4cc2eb1e883839f823b30e1f22654e340467aea8/src/shapes/Plane.js#L7
+            // A plane, facing in the Z direction. The plane has its surface at z=0
+            // and everything below z=0 is assumed to be solid plane.
+            // To make the plane face in some other direction than z, you must put it inside
+            // a Body and rotate that body. See the demos.
+
+            var x = new CANNON.Vec3(1,0,0);
+            var y = new CANNON.Vec3(0,1,0);
+            var z = new CANNON.Vec3(0,0,1);
+            
             var planes = [
-                [0, 0, 0]
-                //[0, 0, 1000] // Why does this break the game?
+                {
+                    pos: [0, 0, 0],
+                    quat: [z, 0]
+                },
+                {    
+                    pos: [0, 200, 0],
+                    quat: [x, Math.PI / 2]
+                },
+                {    
+                    pos: [0, -200, 0],
+                    quat: [x, -Math.PI / 2]
+                },
+                {    
+                    pos: [-20, 0, 60],
+                    quat: [y, -Math.PI * 5 / 4]
+                },
+                {    
+                    pos: [20, 0, 60],
+                    quat: [y, Math.PI * 5 / 4]
+                },
+                {    
+                    pos: [20, 0, 0],
+                    quat: [y, -Math.PI / 4]
+                },
+                {    
+                    pos: [-20, 0, 0],
+                    quat: [y, Math.PI / 4]
+                }
             ];
             var groundShape = new CANNON.Plane();
-            planes.forEach(function(planeLoc) {
+            planes.forEach(function(planeDef) {
                 var groundBody = new CANNON.Body({
                     mass: 0, // mass == 0 makes the body static
                     material: physicsMaterial
                 });
-                groundBody.position.set(planeLoc[0], planeLoc[1], planeLoc[2]);
+                var pos = planeDef.pos;
+                var quat = planeDef.quat;
+                groundBody.position.set(pos[0], pos[1], pos[2]);
                 console.log(groundBody.position)
-                groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,0,1), -Math.PI/2);
+                groundBody.quaternion.setFromAxisAngle(quat[0], quat[1]);
                 groundBody.addShape(groundShape);
-                newBody(groundBody, {type: bodyTypes.ground});
+                newBody(groundBody, {
+                    type: bodyTypes.ground,
+                    quaternion: groundBody.quaternion 
+                });
             })
         };
+        
+        
 
         function handleCommands() {
             for(var i = 0; i < newCommands.length; i++) {
