@@ -5,85 +5,89 @@ define(function(require) {
     var types = require('js/types');
     
     var controls = {};
+    var instructions = document.getElementById("instructions");
+    
+    controls.supportsPointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
     controls.requirePointerLock = function(ee) {
         controls.enabled = false;
-        var supportsPointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
-        if ( supportsPointerLock ) {
-            var element = document.body;
-            var pointerlockchange = function ( event ) {
-                if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
+        instructions.style.display = 'block';
+        var element = document.body;
+        controls.isPointerLocked = function(){
+            return document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element;
+        }
+        var pointerlockchange = function ( event ) {
+            if ( controls.isPointerLocked() ) {
 
-                    controls.enabled = true;
-                    //ee.trigger('unpause'); 
+                controls.enabled = true;
+                //ee.trigger('unpause'); 
 
-                    //blocker.style.display = 'none';
-
-                } else {
-
-                    controls.enabled = false;
-                    //ee.trigger('pause'); 
-
-                    //blocker.style.display = '-webkit-box';
-                    //blocker.style.display = '-moz-box';
-                    //blocker.style.display = 'box';
-
-                    instructions.style.display = '';
-
-                }
-
-            };
-
-            var pointerlockerror = function ( event ) {
-                instructions.style.display = '';
-            };
-
-            // Hook pointer lock state change events
-            document.addEventListener( 'pointerlockchange', pointerlockchange, false );
-            document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
-            document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
-
-            document.addEventListener( 'pointerlockerror', pointerlockerror, false );
-            document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
-            document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
-
-            instructions.addEventListener( 'click', function ( event ) {
+                //blocker.style.display = 'none';
                 instructions.style.display = 'none';
+            } else {
 
-                // Ask the browser to lock the pointer
-                element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+                controls.enabled = false;
+                //ee.trigger('pause'); 
 
-                if ( /Firefox/i.test( navigator.userAgent ) ) {
+                //blocker.style.display = '-webkit-box';
+                //blocker.style.display = '-moz-box';
+                //blocker.style.display = 'box';
 
-                    var fullscreenchange = function ( event ) {
+                instructions.style.display = '';
 
-                        if ( document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
+            }
 
-                            document.removeEventListener( 'fullscreenchange', fullscreenchange );
-                            document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+        };
 
-                            element.requestPointerLock();
-                        }
+        var pointerlockerror = function ( event ) {
+            //instructions.style.display = '';
+            humane.error("pointer lock error: " + event);
+            console.error(event);
+        };
 
+        // Hook pointer lock state change events
+        document.addEventListener( 'pointerlockchange', pointerlockchange, false );
+        document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
+        document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
+
+        document.addEventListener( 'pointerlockerror', pointerlockerror, false );
+        document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
+        document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
+
+        instructions.addEventListener( 'click', function ( event ) {
+            instructions.style.display = 'none';
+
+            // Ask the browser to lock the pointer
+            element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+
+            if ( /Firefox/i.test( navigator.userAgent ) ) {
+
+                var fullscreenchange = function ( event ) {
+
+                    if ( document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
+
+                        document.removeEventListener( 'fullscreenchange', fullscreenchange );
+                        document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+
+                        element.requestPointerLock();
                     }
 
-                    document.addEventListener( 'fullscreenchange', fullscreenchange, false );
-                    document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
-
-                    element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
-
-                    element.requestFullscreen();
-
-                } else {
-
-                    element.requestPointerLock();
-
                 }
 
-            }, false );
+                document.addEventListener( 'fullscreenchange', fullscreenchange, false );
+                document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
 
-        } else {
-            instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
-        }
+                element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
+
+                element.requestFullscreen();
+
+            } else {
+
+                element.requestPointerLock();
+
+            }
+
+        }, false );
+
     };
 
     controls.BallControls = function ( camera ) {
@@ -97,6 +101,7 @@ define(function(require) {
         pitchObject.add( camera );
 
         var yawObject = new THREE.Object3D();
+        scope.object = yawObject;
         yawObject.position.y = 2;
         yawObject.add( pitchObject );
 
@@ -126,7 +131,6 @@ define(function(require) {
         var PI_2 = Math.PI / 2;
 
         var onMouseMove = function ( event ) {
-
             if ( scope.enabled === false ) return;
 
             var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
@@ -134,41 +138,9 @@ define(function(require) {
 
             yawObject.rotation.y -= movementX * 0.002;
             pitchObject.rotation.x -= movementY * 0.002;
-
             pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, pitchObject.rotation.x ) );
             //console.log(movementX, movementY);
         };
-
-        var binds = {};
-        var commands = {
-            forward: 'forward',
-            back: 'back',
-            left: 'left',
-            right: 'right',
-            fly: 'fly',
-            look: 'look'
-        };
-        
-        binds[keyboard.keyCodes.up] =    commands.forward;
-        binds[keyboard.keyCodes.w] =     commands.forward;
-        binds[keyboard.keyCodes.left] =  commands.left;
-        binds[keyboard.keyCodes.a] =     commands.left;
-        binds[keyboard.keyCodes.down] =  commands.back;
-        binds[keyboard.keyCodes.s] =     commands.back;
-        binds[keyboard.keyCodes.right] = commands.right;
-        binds[keyboard.keyCodes.d] =     commands.right;
-        binds[keyboard.keyCodes.space] = commands.fly;
-        
-        var updateCommands = function() {
-            var commandsCalled = {};
-            Object.keys(keyboard.keysDown).forEach(function(keyCode,index) {
-                var bound = binds[keyCode];
-                if(bound !== undefined)
-                    commandsCalled[bound] = true;
-            });
-            return commandsCalled;
-        };
-
 
         document.addEventListener( 'mousemove', onMouseMove, false );
 
@@ -176,13 +148,13 @@ define(function(require) {
             return yawObject;
         };
 
-        this.getDirection = function(targetVec){
-            targetVec.set(0,0,-1);
-            quat.multiplyVector3(targetVec);
-        }
+        //this.getDirection = function(targetVec){
+        //    targetVec.set(0,0,-1);
+        //    quat.multiplyVector3(targetVec);
+        //}
 
         // Moves the camera to the Cannon.js object position and adds velocity to the object if the run key is down
-        var inputVelocity = new THREE.Vector3();
+        //var inputVelocity = new THREE.Vector3();
         var euler = new THREE.Euler();
         this.update = function ( delta ) {
 
@@ -190,33 +162,14 @@ define(function(require) {
 
             delta *= 0.1;
 
-            inputVelocity.set(0,0,0);
-
-            var commandsCalled = updateCommands();
-            if ( commandsCalled[commands.forward] ){
-                inputVelocity.z = -velocityFactor * delta;
-            }
-            if ( commandsCalled[commands.back] ){
-                inputVelocity.z = velocityFactor * delta;
-            }
-
-            if ( commandsCalled[commands.left] ){
-                inputVelocity.x = -velocityFactor * delta;
-            }
-            if ( commandsCalled[commands.right] ){
-                inputVelocity.x = velocityFactor * delta;
-            }
-            if (commandsCalled[commands.fly]) {
-                //cannonBody.force.y = jumpForce;
-                //velocity.y = jumpVelocity;
-            }
+            //inputVelocity.set(0,0,0);
 
             // Convert velocity to world coordinates
-            euler.x = pitchObject.rotation.x;
+            /*euler.x = pitchObject.rotation.x;
             euler.y = yawObject.rotation.y;
-            euler.order = "XYZ";
-            quat.setFromEuler(euler);
-            inputVelocity.applyQuaternion(quat);
+            euler.order = "XYZ";*/
+            //quat.setFromEuler(euler);
+            //inputVelocity.applyQuaternion(quat);
             //quat.multiplyVector3(inputVelocity);
 
             // Add to the object

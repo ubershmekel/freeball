@@ -84,9 +84,17 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         var scene = viewer.scene;
         scene.fog = new THREE.Fog( colors.skyBlue, 0, 500 );
 
-        controls = initControls(camera, renderer);
+        if (false){//BallControls.supportsPointerLock) {
+            controls = new BallControls.BallControls(camera);
+            BallControls.requirePointerLock();
+            scene.add(controls.object);
+        } else {
+            controls = initControls(camera, renderer);
+            scene.add(camera);
+        }
+
+
         viewer.controls = controls;
-        scene.add(camera);
         
         //camera.position.set(30,0,0);
         camera.up = new THREE.Vector3(0,0,1);
@@ -282,7 +290,8 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             console.log(camera.position);
             //camera.position.setY(camera.position.y + 2);
             //camera.position.setZ(camera.position.z + 1);
-            playerMeshes[focusPlayer].add(camera);
+            //playerMeshes[focusPlayer].add(camera);
+            playerMeshes[focusPlayer].add(controls.object);
         }
         
         viewer.serverTick = function(packet) {
@@ -325,10 +334,23 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         
         requestAnimationFrame( animate );
 
-        socket = socketio();
         // To run the server locally:
-        //server(v.serverTick);
-        socket.emit(types.eventTypes.clientRequestGame);
+        // TODO: make `runLocal` a button in the UI?
+        var runLocal = true;
+        
+        if(runLocal) {
+            socket = {};
+            socket.callbacks = {};
+            socket.on = function(eventName, func) {
+                socket.callbacks[eventName] = func;
+            };
+            socket.emit = function(eventName, data) {
+                return socket.callbacks[eventName](data);
+            };
+        } else {
+            socket = socketio();
+        }
+        
         socket.on(types.eventTypes.setPlayerId, v.onSetPlayerId);
         socket.on(types.eventTypes.serverStartGame, v.onStartGame);
         socket.on('error', function(e) {
@@ -342,13 +364,21 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             humane.log(line);
         });
         socket.on(types.eventTypes.tick, v.serverTick);
-
-        //setInterval(function() {
-            // TODO: delete his
-        //    console.log('forward');
-        //    socket.emit(types.eventTypes.command, new types.moveCommand({x:0,y:1,z:0}));
-        //}, 1000);
         
+        
+        if (runLocal) {
+            // TODO: Make this more elegant 
+            thisPlayerId = 'playerOne';
+            var playersArray =  [{id: thisPlayerId, team: 0}, {id:'playerTwo', team: 1}];
+            var game = server(socket.emit, playersArray);
+            socket.on(types.eventTypes.command, function(com) {
+                com.playerId = thisPlayerId;
+                game.command(com);
+            });
+        } else {
+            socket.emit(types.eventTypes.clientRequestGame);
+        }
+
         return v;
     }
     
