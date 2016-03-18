@@ -84,7 +84,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         var scene = viewer.scene;
         scene.fog = new THREE.Fog( colors.skyBlue, 0, 500 );
 
-        if (false){//BallControls.supportsPointerLock) {
+        if (BallControls.supportsPointerLock) {
             controls = new BallControls.BallControls(camera);
             BallControls.requirePointerLock();
             scene.add(controls.object);
@@ -250,6 +250,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             //console.log(commands);
             var moveVector = noMove.clone();
             var forward = camera.getWorldDirection();
+            // TODO: Should I try to avoid allocations?
             var up = camera.up.clone();
             var left = up.clone().cross(forward);
             if (commands[keyboardCommands.names.forward]) {
@@ -285,12 +286,14 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             var outside = 7;
             if(playerMeshes[focusPlayer].position.y < 0)
                 outside = -outside;
-            camera.position.setY(outside);
-            camera.position.setZ(2);
+            //camera.position.setX(outside);
+            camera.position.setZ(8);
+            
             console.log(camera.position);
             //camera.position.setY(camera.position.y + 2);
             //camera.position.setZ(camera.position.z + 1);
             //playerMeshes[focusPlayer].add(camera);
+            
             playerMeshes[focusPlayer].add(controls.object);
         }
         
@@ -367,7 +370,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         
         
         if (runLocal) {
-            // TODO: Make this more elegant 
+            // TODO: Make this more elegant. E.g. remove the command forwarding from the matchmaker.
             thisPlayerId = 'playerOne';
             var playersArray =  [{id: thisPlayerId, team: 0}, {id:'playerTwo', team: 1}];
             var game = server(socket.emit, playersArray);

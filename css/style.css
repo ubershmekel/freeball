@@ -74,16 +74,26 @@ body {
 
 }
 
+#instructionsText {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+}
+
 #instructions {
     display: none;
     position: fixed;
-    right: 0;
-    top: 0;
-    width: 200px;
-    height: 30px;
+    text-align: center;
+    left: 50%;
+    top: 50%;
+    width: 400px;
+    height: 60px;
     border: #fb0 dotted 4px;
     background-color: #fff;
     cursor: pointer;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);    
 }
 
 #scoreBoard {

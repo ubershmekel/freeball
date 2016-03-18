@@ -32,7 +32,7 @@ define(function(require) {
                 //blocker.style.display = '-moz-box';
                 //blocker.style.display = 'box';
 
-                instructions.style.display = '';
+                instructions.style.display = 'block';
 
             }
 
@@ -96,13 +96,16 @@ define(function(require) {
         var velocityFactor = 0.6;
         var jumpForce = 200;
         var scope = this;
+        var PI_2 = Math.PI / 2;
 
         var pitchObject = new THREE.Object3D();
+        //pitchObject.position.y = 2;
         pitchObject.add( camera );
+        pitchObject.rotation.y = PI_2;
 
         var yawObject = new THREE.Object3D();
         scope.object = yawObject;
-        yawObject.position.y = 2;
+        //yawObject.position.y = -4;
         yawObject.add( pitchObject );
 
         var quat = new THREE.Quaternion();
@@ -128,7 +131,6 @@ define(function(require) {
 
         //var velocity = cannonBody.velocity;
 
-        var PI_2 = Math.PI / 2;
 
         var onMouseMove = function ( event ) {
             if ( scope.enabled === false ) return;
@@ -136,9 +138,11 @@ define(function(require) {
             var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
             var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
-            yawObject.rotation.y -= movementX * 0.002;
-            pitchObject.rotation.x -= movementY * 0.002;
-            pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, pitchObject.rotation.x ) );
+            yawObject.rotation.z -= movementX * 0.002;
+            pitchObject.rotation.y -= movementY * 0.002;
+            console.log(pitchObject.rotation.y);
+            // limit up/down so you can't break your neck backwards and reverse the yawObject effect
+            pitchObject.rotation.y = Math.max( 0, Math.min( Math.PI, pitchObject.rotation.y ) );
             //console.log(movementX, movementY);
         };
 
