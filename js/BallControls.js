@@ -99,12 +99,14 @@ define(function(require) {
         var PI_2 = Math.PI / 2;
 
         var pitchObject = new THREE.Object3D();
+        scope.pitchObject = pitchObject;
         //pitchObject.position.y = 2;
         pitchObject.add( camera );
         pitchObject.rotation.y = PI_2;
 
         var yawObject = new THREE.Object3D();
         scope.object = yawObject;
+        yawObject.rotation.z = -PI_2;
         //yawObject.position.y = -4;
         yawObject.add( pitchObject );
 
@@ -140,7 +142,7 @@ define(function(require) {
 
             yawObject.rotation.z -= movementX * 0.002;
             pitchObject.rotation.y -= movementY * 0.002;
-            console.log(pitchObject.rotation.y);
+            //console.log(pitchObject.rotation.y);
             // limit up/down so you can't break your neck backwards and reverse the yawObject effect
             pitchObject.rotation.y = Math.max( 0, Math.min( Math.PI, pitchObject.rotation.y ) );
             //console.log(movementX, movementY);

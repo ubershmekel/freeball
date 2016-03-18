@@ -16,11 +16,12 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
     colors.yellow =   0xffff99;
     colors.blue =  0x9999ff;
     colors.skyBlue = 0xddddff;
+    colors.white = 0xffffff;
     var redMaterial = new THREE.MeshLambertMaterial( { color: colors.red } );
     var blueMaterial = new THREE.MeshLambertMaterial( { color: colors.blue } );
     var yellowMaterial = new THREE.MeshLambertMaterial( { color: colors.yellow } );
     var ambientLight = new THREE.AmbientLight( 0x555555 );
-    var earthTexture = new THREE.TextureLoader().load( 'images/land_ocean_ice_cloud_2048.jpg' );
+    //var earthTexture = new THREE.TextureLoader().load( 'images/land_ocean_ice_cloud_2048.jpg' );
     
     var stats;
     var createTickStats = function() {
@@ -110,10 +111,26 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
 
         scene.add( ambientLight );
 
-        var light = new THREE.SpotLight( 0xffffff );
-        light.position.set( 0, 0, 100 );
-        light.target.position.set( 0, 0, 0 );
-        if (true) {
+        var lights = [
+            {
+                pos: [0, 0, 100],
+                color: colors.white
+            },
+            {
+                pos: [0, -100, 100],
+                color: colors.blue
+            },
+            {
+                pos: [0, 100, 100],
+                color: colors.red
+            }
+        ];
+        
+        lights.forEach(function(lite) {
+            var light = new THREE.SpotLight( lite.color );
+            var pos = lite.pos;
+            light.position.set( pos[0], pos[1], pos[2] );
+            light.target.position.set( pos[0], pos[1], 0 );
             light.castShadow = true;
 
             light.shadow.camera.near = 20;
@@ -122,14 +139,18 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
 
             light.shadowMapBias = 0.1;
             light.shadowMapDarkness = 0.7;
-            light.shadow.mapSize.Width = 4*512;
-            light.shadow.mapSize.Height = 4*512;
+            light.shadow.mapSize.Width = 1*512;
+            light.shadow.mapSize.Height = 1*512;
 
             //light.shadowCameraVisible = true;
-        }
+            //scene.add(new THREE.CameraHelper( light.shadow.camera ));
+            
+            scene.add( light );
+            scene.add( light.target );
+            viewer.light = light;
+        })
         
-        scene.add( light );
-        viewer.light = light;
+        //viewer.light = light;
 
         var renderer = new THREE.WebGLRenderer();
         viewer.renderer = renderer;
@@ -180,7 +201,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationFromQuaternion(typeInfo.quaternion) );
 
             var material = new THREE.MeshLambertMaterial( {
-                color: colors.green,
+                color: colors.white,
                 wireframe: true,
                 //wireframeLinewidth does not work on windows: wireframeLinewidth: 2.0
                 //map: earthTexture
