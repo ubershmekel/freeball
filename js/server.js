@@ -35,9 +35,9 @@ define(function(require) {
         var commands = {};
         var world = new CANNON.World();
         // TODO: Why does normal `g` not work here? It looks sluggish... 
-        world.gravity.set(0, 0, -19.82); // m/s²
+        world.gravity.set(0, 0, -5.82); // m/s²
         var physicsMaterial = new CANNON.Material("slipperyMaterial");
-        var contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, { friction: 0.1, restitution: 0.8 });
+        var contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, { friction: 0.1, restitution: 0.5 });
         world.addContactMaterial(contactMaterial);
         
         var game = {};
@@ -58,7 +58,7 @@ define(function(require) {
         };
         
         function createBall() {
-            var radius = 4; // m
+            var radius = 6; // m
             var sphereBody = new CANNON.Body({
                 mass: 2, // kg
                 position: new CANNON.Vec3(0, 0, 25), // m
@@ -138,11 +138,11 @@ define(function(require) {
                 
                 // angled roof
                 {    
-                    pos: [-20, 0, 40],
+                    pos: [-30, 0, 50],
                     quat: [y, -Math.PI * 5 / 4]
                 },
                 {    
-                    pos: [20, 0, 40],
+                    pos: [30, 0, 50],
                     quat: [y, Math.PI * 5 / 4]
                 },
                 

@@ -176,7 +176,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         
         function createPlane(typeInfo) {
             // floor
-            var planeGeometry = new THREE.PlaneGeometry( 50, 400, 50, 50 );
+            var planeGeometry = new THREE.PlaneGeometry( 50, 400, 20, 20 );
             planeGeometry.applyMatrix( new THREE.Matrix4().makeRotationFromQuaternion(typeInfo.quaternion) );
 
             var material = new THREE.MeshLambertMaterial( {
