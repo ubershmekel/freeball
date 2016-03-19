@@ -100,10 +100,27 @@ body {
     background-color: #000;
     color: #fff;
     position:absolute;
-    padding: 10px;
+    padding: 0;
     position: absolute;
+    right: 0;
+    /*
     left: 50%;
     transform: translate(-50%, 0);
+    */
+    font-size: 20px;
+}
+
+.score {
+    display: inline-block;
+    padding: 4px 8px;
+}
+
+#score0 {
+    background-color: #00f;
+}
+
+#score1 {
+    background-color: #f00;
 }
 
 /*
@@ -122,12 +139,12 @@ body {
 }
 
 
-.red {
-    color: #ff9999;
+.team1 {
+    background-color: #ff9999;
 }
 
-.blue {
-    color: #9999ff;
+.team0 {
+    background-color: #9999ff;
 }
 
 #gameOver {
@@ -136,5 +153,12 @@ body {
     font-weight: bold;
     text-align: center;
 }
+
+
+.wonToast {
+    font-size: 4em;
+}
+
+
 
 

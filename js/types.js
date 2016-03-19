@@ -5,7 +5,8 @@ define([], function() {
             box: "box",
             ball: "ball",
             ground: "ground",
-            player: "player"
+            player: "player",
+            popper: "popper"
     };
     return {
         bodyTypes: bodyTypes,
@@ -15,7 +16,9 @@ define([], function() {
             serverStartGame: "serverStartGame",
             tick: "tick",
             command: "command",
-            toast: "toast"
+            toast: "toast",
+            score: "score",
+            gameOver: "gameOver"
         },
         player: function(teamI, playerI, radius) {
             this.teamI = teamI;
@@ -26,6 +29,7 @@ define([], function() {
         moveCommand: function(moveVec, playerId) {
             this.moveVec = moveVec;
             this.playerId = playerId;
-        }
+        },
+        teamNames: ["Blue", "Red"]
     };
 });

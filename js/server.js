@@ -5,6 +5,8 @@ define(function(require) {
     var CANNON = require("cannon");
     var types = require("js/types");
     var bodyTypes = types.bodyTypes;
+    var ballRadius = 6;
+    var endGameScore = 2;
     
     var packetMembers = {
         position: "p",
@@ -34,6 +36,15 @@ define(function(require) {
         var maxSubSteps = 3;
         var commands = {};
         var world = new CANNON.World();
+        var scores = {};
+        var isGameOver = false;
+        var playerStartPos = [
+            new CANNON.Vec3(0, -50, 5),
+            new CANNON.Vec3(0, 50, 5)
+        ];
+        var ballStartPos = new CANNON.Vec3(0, 0, 25);
+        var ballBody;
+
         // TODO: Why does normal `g` not work here? It looks sluggish... 
         world.gravity.set(0, 0, -5.82); // m/s²
         var physicsMaterial = new CANNON.Material("slipperyMaterial");
@@ -54,14 +65,15 @@ define(function(require) {
         function newBody(body, typ) {
             // notify the client something is added to the world
             newBodiesThisTick.push(typ);
+            body.gameType = typ;
             world.addBody(body);
         };
         
         function createBall() {
-            var radius = 6; // m
+            var radius = ballRadius; // m
             var sphereBody = new CANNON.Body({
                 mass: 2, // kg
-                position: new CANNON.Vec3(0, 0, 25), // m
+                position: ballStartPos, // m
                 shape: new CANNON.Sphere(radius),
                 material: physicsMaterial
             });
@@ -69,17 +81,19 @@ define(function(require) {
                 type: bodyTypes.ball,
                 radius: radius
             });
+            ballBody = sphereBody;
         }
         
+        // TODO: delete playerBodies
         var playerBodies = {};
-            // Create a sphere
+        var playerSlotBodies = [];
         function createPlayer(player) {
             var radius = 1; // m
-            var x = 0; //playerI * 10;
+            var x = 0;
             var y = player.team * 100 - 50;
             var sphereBody = new CANNON.Body({
                 mass: 5, // kg
-                position: new CANNON.Vec3(x, y, 5), // m
+                position: playerStartPos[player.team], // m
                 shape: new CANNON.Sphere(radius),
                 material: physicsMaterial
             });
@@ -93,19 +107,14 @@ define(function(require) {
             };
             newBody(sphereBody, typeInfo);
             playerBodies[player.id] = sphereBody;
+            playerSlotBodies.push(sphereBody);
+            scores[player.team] = 0;
         }
         
         function createAllPlayers() {
             playersArray.map(function(playa) {
                 createPlayer(playa);
             });
-            /*var teamSizes = [1, 1];
-            for(var teamI = 0; teamI < teamSizes.length; teamI++) {
-                var playerCount = teamSizes[teamI];
-                for(var playerI = 0; playerI < playerCount; playerI++) {
-                    createPlayer(teamI, playerI);
-                }
-            }*/
         };
         
         function createGround() {
@@ -165,7 +174,7 @@ define(function(require) {
                 var pos = planeDef.pos;
                 var quat = planeDef.quat;
                 groundBody.position.set(pos[0], pos[1], pos[2]);
-                console.log(groundBody.position)
+                //console.log(groundBody.position)
                 groundBody.quaternion.setFromAxisAngle(quat[0], quat[1]);
                 groundBody.addShape(groundShape);
                 newBody(groundBody, {
@@ -175,7 +184,62 @@ define(function(require) {
             })
         };
         
+        function createPoppers() {
+            var popperData = [
+                {y:-120, team: 0},
+                {y: 120, team: 1}
+            ];
+            var popperRadius = 4;
+            
+            popperData.forEach(function(popper) {
+                var popperBody = new CANNON.Body({
+                    mass: 0, // static
+                    position: new CANNON.Vec3(0, popper.y, 8),
+                    shape: new CANNON.Sphere(popperRadius),
+                    material: physicsMaterial
+                });
+                newBody(popperBody, {
+                    type: bodyTypes.popper,
+                    team: popper.team,
+                    radius: popperRadius
+                });
+                
+                popperBody.addEventListener("collide", function(e) {
+                    var targetType = e.body.gameType.type;
+
+                    if(targetType === bodyTypes.ball) {
+                        score(popper.team);
+                    }
+                });
+            });
+        }
         
+        function resetPositions() {
+            playerSlotBodies.forEach(function (body, index) {
+                body.position.copy(playerStartPos[index]);
+                body.velocity.set(0, 0, 0);
+            });
+            
+            ballBody.position.copy(ballStartPos);
+            ballBody.velocity.set(0, 0, 0);
+        }
+        
+        function score(team) {
+            scores[team] += 1;
+            eventCallback(types.eventTypes.score, {
+                teamScored: team,
+                newScore: scores[team]
+            });
+            if(scores[team] >= endGameScore) {
+                eventCallback(types.eventTypes.gameOver, {
+                    teamWon: team,
+                });
+                isGameOver = true;
+            } else {
+                resetPositions();
+            }
+            //console.log("Score");
+        }
 
         function handleCommands() {
             for(var i = 0; i < newCommands.length; i++) {
@@ -192,6 +256,7 @@ define(function(require) {
                     //var modify = body.force;
                     var modify = body.velocity;
                     //body.velocity.copy(com.moveVec);
+                    
                     var v = com.moveVec;
                     body.force.set(v.x, v.y, v.z);
                     body.force.normalize();
@@ -248,7 +313,8 @@ define(function(require) {
             lastTimeMs = timeMs;
             
             reportState();
-            setTimeout(simloop, msPerFrame);
+            if(!isGameOver)
+                setTimeout(simloop, msPerFrame);
         };
         
         function notifyPlayersGameStarted() {
@@ -261,6 +327,7 @@ define(function(require) {
             createGround();
             createBall();
             createAllPlayers();
+            createPoppers();
             notifyPlayersGameStarted();
             setTimeout(simloop, msPerFrame);
         }

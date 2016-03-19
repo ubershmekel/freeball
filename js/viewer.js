@@ -19,6 +19,10 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
     colors.white = 0xffffff;
     var redMaterial = new THREE.MeshLambertMaterial( { color: colors.red } );
     var blueMaterial = new THREE.MeshLambertMaterial( { color: colors.blue } );
+    var popperMaterials = {
+        0: new THREE.MeshLambertMaterial( { color: colors.blue, transparent: true, opacity: 0.5 } ),
+        1: new THREE.MeshLambertMaterial( { color: colors.red, transparent: true, opacity: 0.5 } )
+    }
     var yellowMaterial = new THREE.MeshLambertMaterial( { color: colors.yellow } );
     var ambientLight = new THREE.AmbientLight( 0x555555 );
     //var earthTexture = new THREE.TextureLoader().load( 'images/land_ocean_ice_cloud_2048.jpg' );
@@ -187,7 +191,11 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         function createBall (typeInfo) {
             var ballRadius = typeInfo.radius;
             var ballGeometry = new THREE.SphereGeometry(ballRadius, 32, 32);
-            var ballMesh = new THREE.Mesh( ballGeometry, yellowMaterial );
+            var material = yellowMaterial;
+            if(typeInfo.type == bodyTypes.popper) {
+                material = popperMaterials[typeInfo.team];
+            }
+            var ballMesh = new THREE.Mesh( ballGeometry, material );
             ballMesh.castShadow = true;
             ballMesh.receiveShadow = true;
             ballMesh.position.set(0, 0, 0);
@@ -259,6 +267,9 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
                     case bodyTypes.ground:
                         createPlane(newObj);
                         break;
+                    case bodyTypes.popper:
+                        createBall(newObj);
+                        break;
                     default:
                         console.warn("Unhandled object type: " + newObj);
                 }
@@ -301,16 +312,18 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         }
         
         function fixCameraOnStart(packet) {
+            // I don't yet understand how this thing works.
+            
             //controls.target.copy(playerMeshes[focusPlayer].position);
             //controls.target = playerMeshes[focusPlayer].position;
             //camera.position.copy(playerMeshes[focusPlayer].position);
-            var outside = 7;
-            if(playerMeshes[focusPlayer].position.y < 0)
-                outside = -outside;
+            //var outside = 7;
+            //if(playerMeshes[focusPlayer].position.y < 0)
+            //    outside = -outside;
             //camera.position.setX(outside);
             camera.position.setZ(8);
             
-            console.log(camera.position);
+            //console.log(camera.position);
             //camera.position.setY(camera.position.y + 2);
             //camera.position.setZ(camera.position.z + 1);
             //playerMeshes[focusPlayer].add(camera);
@@ -343,6 +356,28 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             thisPlayerId = playerId;
             console.log("I am", playerId);
         };
+        
+        function scoreToast(line, team) {
+            humane.log(line, { addnCls: 'team' + team})
+        }
+        
+        function gameOverToast(line, team) {
+            humane.log(line, { timeout: 15000, addnCls: 'wonToast team' + team})
+        }
+        
+        viewer.score = function(data) {
+            var team = data.teamScored;
+            var el = document.getElementById('score' + team);
+            el.innerHTML = data.newScore;
+            var line = types.teamNames[team] + ' scored!';
+            scoreToast(line, team)
+        };
+        
+        viewer.gameOver = function(data) {
+            var team = data.teamWon;
+            var line = types.teamNames[team] + ' won!';
+            gameOverToast(line, team)
+        }
         
         return viewer;
     }
@@ -377,6 +412,8 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
         
         socket.on(types.eventTypes.setPlayerId, v.onSetPlayerId);
         socket.on(types.eventTypes.serverStartGame, v.onStartGame);
+        socket.on(types.eventTypes.score, v.score);
+        socket.on(types.eventTypes.gameOver, v.gameOver);
         socket.on('error', function(e) {
             // TODO: check if this works somehow
             humane.error(e);
