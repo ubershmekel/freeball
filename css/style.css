@@ -87,8 +87,8 @@ body {
     text-align: center;
     left: 50%;
     top: 50%;
-    width: 400px;
-    height: 60px;
+    width: 600px;
+    height: 160px;
     border: #fb0 dotted 4px;
     background-color: #fff;
     cursor: pointer;
@@ -131,7 +131,7 @@ body {
 }
 
 #gameOver {
-    background-color: #ffffff00;
+    background-color: #ffffff;
     font-size: 5em;
     font-weight: bold;
     text-align: center;

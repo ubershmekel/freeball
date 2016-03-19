@@ -195,7 +195,7 @@ define(function(require) {
                     var v = com.moveVec;
                     body.force.set(v.x, v.y, v.z);
                     body.force.normalize();
-                    body.force = body.force.scale(300);
+                    body.force = body.force.scale(500);
 
                     /*
                     var v = com.moveVec;

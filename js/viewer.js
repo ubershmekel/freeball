@@ -117,11 +117,11 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
                 color: colors.white
             },
             {
-                pos: [0, -100, 100],
+                pos: [0, -130, 100],
                 color: colors.blue
             },
             {
-                pos: [0, 100, 100],
+                pos: [0, 130, 100],
                 color: colors.red
             }
         ];
@@ -135,7 +135,7 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
 
             light.shadow.camera.near = 20;
             light.shadow.camera.far = 100;
-            light.shadow.camera.fov = 80;
+            light.shadow.camera.fov = 90;
 
             light.shadowMapBias = 0.1;
             light.shadowMapDarkness = 0.7;
