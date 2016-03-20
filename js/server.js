@@ -189,7 +189,7 @@ define(function(require) {
                 {y:-120, team: 0},
                 {y: 120, team: 1}
             ];
-            var popperRadius = 4;
+            var popperRadius = 5;
             
             popperData.forEach(function(popper) {
                 var popperBody = new CANNON.Body({
@@ -226,16 +226,17 @@ define(function(require) {
         
         function score(team) {
             scores[team] += 1;
-            eventCallback(types.eventTypes.score, {
-                teamScored: team,
-                newScore: scores[team]
-            });
             if(scores[team] >= endGameScore) {
                 eventCallback(types.eventTypes.gameOver, {
                     teamWon: team,
+                    newScore: scores[team]
                 });
                 isGameOver = true;
             } else {
+                eventCallback(types.eventTypes.score, {
+                    teamScored: team,
+                    newScore: scores[team]
+                });                
                 resetPositions();
             }
             //console.log("Score");

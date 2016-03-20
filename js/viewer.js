@@ -2,12 +2,26 @@
 // client-side THREE.JS viewer of the game
 var v;
 requirejs(
-       ['three', 'Stats', 'socketio', 'js/types', 'js/server', 'js/keyboardCommands', 'js/BallControls', 'TrackballControls'], 
-function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands,         BallControls) {
+       ['three', 'Stats', 'js/types', 'js/server', 'js/keyboardCommands', 'js/BallControls', 'TrackballControls'], 
+function(THREE,   Stats,      types,      server,      keyboardCommands,         BallControls) {
     var bodyTypes = types.bodyTypes;
     var socket;
     var thisPlayerId = null;
     var focusPlayer = null;
+    var socketio = null;
+    
+    require(["socketio"],
+        function(myOptionalModule) {
+            // loaded successfully
+            socketio = myOptionalModule;
+            console.log("Found socketio");
+        },
+        function(error) {
+            // load failed
+            console.log("No socketio");
+        }
+    );
+    console.log('Socketio: ' + socketio);
     
     var rendererDivId = "renderer";
     var colors = {};
@@ -365,16 +379,21 @@ function(THREE,   Stats,   socketio,   types,      server,      keyboardCommands
             humane.log(line, { timeout: 15000, addnCls: 'wonToast team' + team})
         }
         
+        function setScore(team, score) {
+            var el = document.getElementById('score' + team);
+            el.innerHTML = score;
+        }
+        
         viewer.score = function(data) {
             var team = data.teamScored;
-            var el = document.getElementById('score' + team);
-            el.innerHTML = data.newScore;
             var line = types.teamNames[team] + ' scored!';
+            setScore(team, data.newScore);
             scoreToast(line, team)
         };
         
         viewer.gameOver = function(data) {
             var team = data.teamWon;
+            setScore(team, data.newScore);
             var line = types.teamNames[team] + ' won!';
             gameOverToast(line, team)
         }
