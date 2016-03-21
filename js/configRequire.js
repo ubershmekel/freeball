@@ -13,6 +13,7 @@ var require = {
         three: 'libs/three.js/three',
         cannon: 'libs/cannon.js/build/cannon',
         Stats: 'js/Stats',
+        optional: 'js/optional',
         TrackballControls: 'js/TrackballControls',
         socketio: 'socket.io/socket.io'
     }

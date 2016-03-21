@@ -1,4 +1,4 @@
-
+var g; // for debugging
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
 
 define(function(require) {
@@ -38,9 +38,11 @@ define(function(require) {
         var world = new CANNON.World();
         var scores = {};
         var isGameOver = false;
+        
+        var playerRadius = 1.5; // m
         var playerStartPos = [
-            new CANNON.Vec3(0, -50, 5),
-            new CANNON.Vec3(0, 50, 5)
+            new CANNON.Vec3(0, -50, 25),
+            new CANNON.Vec3(0, 50, 25)
         ];
         var ballStartPos = new CANNON.Vec3(0, 0, 25);
         var ballBody;
@@ -88,19 +90,18 @@ define(function(require) {
         var playerBodies = {};
         var playerSlotBodies = [];
         function createPlayer(player) {
-            var radius = 1; // m
             var x = 0;
             var y = player.team * 100 - 50;
             var sphereBody = new CANNON.Body({
                 mass: 5, // kg
                 position: playerStartPos[player.team], // m
-                shape: new CANNON.Sphere(radius),
+                shape: new CANNON.Sphere(playerRadius),
                 material: physicsMaterial
             });
             //var playerId = '' + teamI + '-' + playerI;
             var typeInfo = {
                 type: bodyTypes.player,
-                radius: radius,
+                radius: playerRadius,
                 teamI: player.team,
                 //playerI: playerI,
                 id: player.id
@@ -331,6 +332,7 @@ define(function(require) {
             createPoppers();
             notifyPlayersGameStarted();
             setTimeout(simloop, msPerFrame);
+            g = game;
         }
         
         main();

@@ -2,13 +2,13 @@
 // client-side THREE.JS viewer of the game
 var v;
 requirejs(
-       ['three', 'Stats', 'js/types', 'js/server', 'js/keyboardCommands', 'js/BallControls', 'TrackballControls'], 
-function(THREE,   Stats,      types,      server,      keyboardCommands,         BallControls) {
+       ['three', 'Stats', 'js/types', 'js/server', 'js/keyboardCommands', 'js/BallControls', 'optional!socketio', 'TrackballControls'], 
+function(THREE,   Stats,      types,      server,      keyboardCommands,      BallControls,               socketio) {
     var bodyTypes = types.bodyTypes;
     var socket;
     var thisPlayerId = null;
     var focusPlayer = null;
-    var socketio = null;
+    /*var socketio = null;
     
     require(["socketio"],
         function(myOptionalModule) {
@@ -20,8 +20,8 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
             // load failed
             console.log("No socketio");
         }
-    );
-    console.log('Socketio: ' + socketio);
+    );*/
+    //console.log('Socketio: ' + socketio);
     
     var rendererDivId = "renderer";
     var colors = {};
@@ -180,9 +180,6 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
         renderer.domElement.id = rendererDivId;
         document.body.appendChild( renderer.domElement );
         
-        var playerRadius = 1;
-        var playerGeometry = new THREE.SphereGeometry(playerRadius, 32, 32);
-        
         function addBodyToScene(mesh, typ) {
             objects.push({
                 mesh: mesh,
@@ -194,6 +191,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
         
         function createPlayer (typeInfo) {
             var colors = {0: blueMaterial, 1: redMaterial};
+            var playerGeometry = new THREE.SphereGeometry(typeInfo.radius, 32, 32);
             var ballMesh = new THREE.Mesh( playerGeometry, colors[typeInfo.teamI] );
             ballMesh.castShadow = true;
             ballMesh.receiveShadow = true;
@@ -414,7 +412,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
 
         // To run the server locally:
         // TODO: make `runLocal` a button in the UI?
-        var runLocal = true;
+        var runLocal = socketio === undefined;
         
         if(runLocal) {
             socket = {};
