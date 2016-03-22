@@ -386,6 +386,11 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      Ba
         return viewer;
     }
     
+    function selectRandom(arr) {
+        // http://stackoverflow.com/questions/4550505/getting-random-value-from-an-array
+        return arr[Math.floor(Math.random() * arr.length)];        
+    }
+    
     function main() {
         v = initScene();
         window.addEventListener( 'resize', onWindowResize, false );
@@ -433,8 +438,8 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      Ba
         
         if (runLocal) {
             // TODO: Make this more elegant. E.g. remove the command forwarding from the matchmaker.
-            thisPlayerId = 'playerOne';
-            var playersArray =  [{id: thisPlayerId, team: 0}, {id:'playerTwo', team: 1}];
+            var playersArray =  [{id: 'playerOne', team: 0}, {id:'playerTwo', team: 1}];
+            thisPlayerId = selectRandom(playersArray).id;
             var game = server(socket.emit, playersArray);
             socket.on(types.eventTypes.command, function(com) {
                 com.playerId = thisPlayerId;

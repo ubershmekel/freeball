@@ -92,7 +92,6 @@ define(function(require) {
 
     controls.BallControls = function ( camera ) {
         this.enabled = true;
-        var eyeYPos = 2; // eyes are 2 meters above the ground
         var velocityFactor = 0.6;
         var jumpForce = 200;
         var scope = this;
