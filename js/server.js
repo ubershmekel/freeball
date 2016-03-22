@@ -48,10 +48,15 @@ define(function(require) {
         var ballBody;
 
         // TODO: Why does normal `g` not work here? It looks sluggish... 
-        world.gravity.set(0, 0, -5.82); // m/s²
-        var physicsMaterial = new CANNON.Material("slipperyMaterial");
-        var contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, { friction: 0.1, restitution: 0.5 });
+        world.gravity.set(0, 0, -7.82); // m/s²
+        var worldMaterial = new CANNON.Material("worldMaterial");
+        var playerMaterial = new CANNON.Material("worldMaterial");
+        var contactMaterial = new CANNON.ContactMaterial(worldMaterial, worldMaterial, { friction: 0.1, restitution: 0.6 });
         world.addContactMaterial(contactMaterial);
+        var pveMaterial = new CANNON.ContactMaterial(playerMaterial, worldMaterial, { friction: 0.1, restitution: 0.3 });
+        world.addContactMaterial(pveMaterial);
+        var pvpMaterial = new CANNON.ContactMaterial(playerMaterial, playerMaterial, { friction: 0.1, restitution: 0.4 });
+        world.addContactMaterial(pvpMaterial);
         
         var game = {};
         game.world = world;
@@ -74,10 +79,10 @@ define(function(require) {
         function createBall() {
             var radius = ballRadius; // m
             var sphereBody = new CANNON.Body({
-                mass: 2, // kg
+                mass: 1, // kg
                 position: ballStartPos, // m
                 shape: new CANNON.Sphere(radius),
-                material: physicsMaterial
+                material: worldMaterial
             });
             newBody(sphereBody, {
                 type: bodyTypes.ball,
@@ -96,8 +101,14 @@ define(function(require) {
                 mass: 5, // kg
                 position: playerStartPos[player.team], // m
                 shape: new CANNON.Sphere(playerRadius),
-                material: physicsMaterial
+                material: playerMaterial
             });
+            
+            // linearDamping is air friction. This makes the player feel more in control
+            // because when they stop holding forward the ball stops moving.
+            // Also it limits the maximum speed to a terminal velocity.
+            sphereBody.linearDamping = 0.3;
+            
             //var playerId = '' + teamI + '-' + playerI;
             var typeInfo = {
                 type: bodyTypes.player,
@@ -170,7 +181,7 @@ define(function(require) {
             planes.forEach(function(planeDef) {
                 var groundBody = new CANNON.Body({
                     mass: 0, // mass == 0 makes the body static
-                    material: physicsMaterial
+                    material: worldMaterial
                 });
                 var pos = planeDef.pos;
                 var quat = planeDef.quat;
@@ -187,17 +198,17 @@ define(function(require) {
         
         function createPoppers() {
             var popperData = [
-                {y:-120, team: 0},
-                {y: 120, team: 1}
+                {y:-150, team: 0},
+                {y: 150, team: 1}
             ];
-            var popperRadius = 5;
+            var popperRadius = 7;
             
             popperData.forEach(function(popper) {
                 var popperBody = new CANNON.Body({
                     mass: 0, // static
                     position: new CANNON.Vec3(0, popper.y, 8),
                     shape: new CANNON.Sphere(popperRadius),
-                    material: physicsMaterial
+                    material: worldMaterial
                 });
                 newBody(popperBody, {
                     type: bodyTypes.popper,

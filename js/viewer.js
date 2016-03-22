@@ -30,6 +30,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      Ba
     colors.yellow =   0xffff99;
     colors.blue =  0x9999ff;
     colors.skyBlue = 0xddddff;
+    colors.darkNight = 0x280137;
     colors.white = 0xffffff;
     var redMaterial = new THREE.MeshLambertMaterial( { color: colors.red } );
     var blueMaterial = new THREE.MeshLambertMaterial( { color: colors.blue } );
@@ -101,7 +102,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      Ba
 
         viewer.scene = new THREE.Scene();
         var scene = viewer.scene;
-        scene.fog = new THREE.Fog( colors.skyBlue, 0, 500 );
+        scene.fog = new THREE.Fog( colors.darkNight, 0, 500 );
 
         if (BallControls.supportsPointerLock) {
             controls = new BallControls.BallControls(camera);
