@@ -6,7 +6,7 @@ var requirejs = require('requirejs');
 var matchmaker = requirejs('js/matchmaker.js');
 
 app.get('/', function(req, res){
-    res.sendFile(__dirname + '/viewer.html');
+    res.sendFile(__dirname + '/index.html');
 });
 
 app.use('/', express.static('.'));
