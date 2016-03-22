@@ -38,6 +38,7 @@ define(function(require) {
         var world = new CANNON.World();
         var scores = {};
         var isGameOver = false;
+        var shouldResetPositions = true;
         
         var playerRadius = 1.5; // m
         var playerStartPos = [
@@ -248,8 +249,12 @@ define(function(require) {
                 eventCallback(types.eventTypes.score, {
                     teamScored: team,
                     newScore: scores[team]
-                });                
-                resetPositions();
+                });
+                
+                // This code would get called mid-world-step so modifying
+                // positions would cause objects to fly around explosively.
+                // Instead we wait for the simulation step to end.
+                shouldResetPositions = true;
             }
             //console.log("Score");
         }
@@ -326,8 +331,14 @@ define(function(require) {
             lastTimeMs = timeMs;
             
             reportState();
-            if(!isGameOver)
+            
+            if(shouldResetPositions) {
+                resetPositions();
+                shouldResetPositions = false;
+            }
+            if(!isGameOver) {
                 setTimeout(simloop, msPerFrame);
+            }
         };
         
         function notifyPlayersGameStarted() {
