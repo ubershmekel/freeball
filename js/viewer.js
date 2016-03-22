@@ -3,25 +3,11 @@
 var v;
 requirejs(
        ['three', 'Stats', 'js/types', 'js/server', 'js/keyboardCommands', 'js/BallControls', 'optional!socketio', 'TrackballControls'], 
-function(THREE,   Stats,      types,      server,      keyboardCommands,      BallControls,               socketio) {
+function(THREE,   Stats,      types,      server,      keyboardCommands,      BallControls,            socketio) {
     var bodyTypes = types.bodyTypes;
     var socket;
     var thisPlayerId = null;
     var focusPlayer = null;
-    /*var socketio = null;
-    
-    require(["socketio"],
-        function(myOptionalModule) {
-            // loaded successfully
-            socketio = myOptionalModule;
-            console.log("Found socketio");
-        },
-        function(error) {
-            // load failed
-            console.log("No socketio");
-        }
-    );*/
-    //console.log('Socketio: ' + socketio);
     
     var rendererDivId = "renderer";
     var colors = {};

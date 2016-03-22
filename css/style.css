@@ -147,6 +147,10 @@ body {
     background-color: #9999ff;
 }
 
+.blue {
+    color: #3333ff;
+}
+
 #gameOver {
     background-color: #ffffff;
     font-size: 5em;
@@ -154,11 +158,16 @@ body {
     text-align: center;
 }
 
-
 .wonToast {
     font-size: 4em;
 }
 
+strong {
+    font-weight: bold;
+}
 
+h2 {
+    font-size: 2em;
+}
 
 

@@ -15,9 +15,9 @@ define("optional", [], {
             // Undefine the module to cleanup internal stuff in requireJS
             requirejs.undef(failedId);
 
-            // Now define the module instance as a simple empty object
+            // Now define the module instance as undefined
             // (NOTE: you can return any other value you want here)
-            define(failedId, [], function(){return {};});
+            define(failedId, [], function(){return undefined;});
 
             // Now require the module make sure that requireJS thinks 
             // that is it loaded. Since we've just defined it, requirejs 
