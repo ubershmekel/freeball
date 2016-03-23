@@ -10,8 +10,8 @@ var require = {
     },
     paths: {
         // --- start THREE sub-components
-        three: 'libs/three.js/three',
-        cannon: 'libs/cannon.js/build/cannon',
+        three: 'node_modules/three/three',
+        cannon: 'node_modules/cannon/build/cannon',
         Stats: 'js/Stats',
         optional: 'js/optional',
         TrackballControls: 'js/TrackballControls',

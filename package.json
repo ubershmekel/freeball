@@ -1,6 +1,6 @@
 {
   "name": "freeball",
-  "version": "0.0.0",
+  "version": "0.0.8",
   "description": "Soccer with balls that can fly",
   "main": "app.js",
   "scripts": {
@@ -24,10 +24,14 @@
   },
   "homepage": "https://github.com/ubershmekel/freeball",
   "dependencies": {
+    "amdefine": "^1.0.0",
     "cannon": "^0.6.2",
     "express": "^4.13.4",
-    "socket.io": "^1.4.5",
     "requirejs": "^2.1.22",
-    "amdefine": "^1.0.0"
+    "socket.io": "^1.4.5",
+    "three": "^0.75.0"
+  },
+  "bin": {
+    "freeball": "app.js"
   }
 }

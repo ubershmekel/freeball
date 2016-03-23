@@ -2,8 +2,8 @@
 if (typeof define !== 'function') { var define = require('amdefine')(module) }
 
 define(function(require) {
-    var server = requirejs('js/server.js');
-    var types = requirejs('js/types.js');
+    var server = require('js/server');
+    var types = require('js/types');
     
     var matchmaker = {};
     var games = [];
