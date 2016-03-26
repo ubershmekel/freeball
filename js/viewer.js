@@ -134,20 +134,20 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      Ba
         lights.forEach(function(lite) {
             var light = new THREE.SpotLight( lite.color );
             var pos = lite.pos;
+            //light.intensity = 0.9;
             light.position.set( pos[0], pos[1], pos[2] );
             light.target.position.set( pos[0], pos[1], 0 );
             light.castShadow = true;
 
-            light.shadow.camera.near = 20;
-            light.shadow.camera.far = 100;
-            light.shadow.camera.fov = 90;
+            light.shadow.camera.near = 10;
+            light.shadow.camera.far = 250;
+            light.shadow.camera.fov = 70;
 
             light.shadowMapBias = 0.1;
             light.shadowMapDarkness = 0.7;
-            light.shadow.mapSize.Width = 1*512;
-            light.shadow.mapSize.Height = 1*512;
+            light.shadow.mapSize.Width = 2*512;
+            light.shadow.mapSize.Height = 2*512;
 
-            //light.shadowCameraVisible = true;
             //scene.add(new THREE.CameraHelper( light.shadow.camera ));
             
             scene.add( light );
