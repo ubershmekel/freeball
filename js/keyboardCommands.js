@@ -28,6 +28,8 @@ define(['js/keyboard'], function(keyboard) {
     binds[keyboard.keyCodes.space] = names.fly;
     binds[keyboard.keyCodes.e] =     names.fly;
     binds[keyboard.keyCodes.q] =     names.dive;
+    binds[keyboard.keyCodes.p] =     names.fly;
+    binds[keyboard.keyCodes.l] =     names.dive;
     
     var update = function() {
         var commandsCalled = {};

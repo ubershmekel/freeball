@@ -2,12 +2,13 @@
 // client-side THREE.JS viewer of the game
 var v;
 requirejs(
-       ['three', 'Stats', 'js/types', 'js/server', 'js/keyboardCommands',    'pointerLockControls', 'optional!socketio', 'trackballControls'], 
-function(THREE,   Stats,      types,      server,      keyboardCommands,      pointerLockControls,            socketio) {
+       ['three', 'Stats', 'js/types', 'js/server', 'js/keyboardCommands', 'optional!socketio', 'pointerLockControls', 'autoCameraControls','trackballControls'], 
+function(THREE,   Stats,      types,      server,      keyboardCommands,            socketio,   pointerLockControls,   autoCameraControls           ) {
     var bodyTypes = types.bodyTypes;
     var socket;
     var thisPlayerId = null;
     var focusPlayer = null;
+    var activeControls = null;
     
     var rendererDivId = "renderer";
     var colors = {};
@@ -90,30 +91,28 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      po
         var scene = viewer.scene;
         scene.fog = new THREE.Fog( colors.darkNight, 0, 500 );
 
-        if (pointerLockControls.supportsPointerLock) {
-            controls = new pointerLockControls.pointerLockControls(camera);
-            pointerLockControls.requirePointerLock();
-            scene.add(controls.object);
-        } else {
-            controls = initTrackball(camera, renderer);
-            scene.add(camera);
-        }
 
+        
+        if (true) {
+            activeControls = autoCameraControls;
+            controls = new autoCameraControls.autoCameraControls(camera, scene);
+        } else {
+            if (pointerLockControls.supportsPointerLock) {
+                activeControls = pointerLockControls;
+                controls = new pointerLockControls.pointerLockControls(camera);
+                pointerLockControls.requirePointerLock();
+                scene.add(controls.object);
+                camera.up = new THREE.Vector3(0,0,1);
+                camera.lookAt(new THREE.Vector3(0,0,0));
+            } else {
+                activeControls = trackballControls;
+                controls = initTrackball(camera, renderer);
+                scene.add(camera);
+            }
+        }
 
         viewer.controls = controls;
         
-        //camera.position.set(30,0,0);
-        camera.up = new THREE.Vector3(0,0,1);
-        camera.lookAt(new THREE.Vector3(0,0,0));
-        //camera.lookAt({x: -0.7654980871707273, y: 0.563635924172992, z: -0.3103662623816727});
-
-        //scene.add( controls.object );
-        //scene.add( controls.getObject() );
-        //var controls = new pointerLockControls.pointerLockControls(camera);
-        //pointerLockControls.requirePointerLock();
-        
-        
-
         scene.add( ambientLight );
 
         var lights = [
@@ -179,15 +178,16 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      po
         function createPlayer (typeInfo) {
             var colors = {0: blueMaterial, 1: redMaterial};
             var playerGeometry = new THREE.SphereGeometry(typeInfo.radius, 32, 32);
-            var ballMesh = new THREE.Mesh( playerGeometry, colors[typeInfo.teamI] );
-            ballMesh.castShadow = true;
-            ballMesh.receiveShadow = true;
-            ballMesh.position.set(0, 0, 0); 
-            playerMeshes.push(ballMesh);
-            addBodyToScene(ballMesh, bodyTypes.player);
+            var playerMesh = new THREE.Mesh( playerGeometry, colors[typeInfo.teamI] );
+            playerMesh.castShadow = true;
+            playerMesh.receiveShadow = true;
+            playerMesh.position.set(0, 0, 0); 
+            playerMeshes.push(playerMesh);
+            addBodyToScene(playerMesh, bodyTypes.player);
         };
 
-        function createBall (typeInfo) {
+        var ballMesh = null;
+        function createSphere (typeInfo) {
             var ballRadius = typeInfo.radius;
             var ballGeometry = new THREE.SphereGeometry(ballRadius, 32, 32);
             var material = yellowMaterial;
@@ -200,6 +200,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      po
             ballMesh.position.set(0, 0, 0);
 
             addBodyToScene(ballMesh, bodyTypes.ball);
+            return ballMesh;
         };
         
         function createPlane(typeInfo) {
@@ -232,7 +233,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      po
 
         
         viewer.update = function() {
-            //v.controls.update()
+            // on paint - should be faster than onServerTick
             controls.update();
             //controls.updateCommands();
             renderer.render( scene, camera );
@@ -258,7 +259,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      po
                 var newObj = objList[i];
                 switch(newObj.type) {
                     case bodyTypes.ball:
-                        createBall(newObj);
+                        ballMesh = createSphere(newObj);
                         break;
                     case bodyTypes.player:
                         createPlayer(newObj);
@@ -267,7 +268,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      po
                         createPlane(newObj);
                         break;
                     case bodyTypes.popper:
-                        createBall(newObj);
+                        createSphere(newObj);
                         break;
                     default:
                         console.warn("Unhandled object type: " + newObj);
@@ -320,17 +321,24 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      po
             //if(playerMeshes[focusPlayer].position.y < 0)
             //    outside = -outside;
             //camera.position.setX(outside);
-            camera.position.setZ(8);
             
             //console.log(camera.position);
             //camera.position.setY(camera.position.y + 2);
             //camera.position.setZ(camera.position.z + 1);
             //playerMeshes[focusPlayer].add(camera);
             
-            playerMeshes[focusPlayer].add(controls.object);
+            if(activeControls === autoCameraControls) {
+                controls.targetNear = playerMeshes[focusPlayer];
+                controls.targetFar = ballMesh;
+            }
+            
+            if(activeControls === pointerLockControls) {
+                camera.position.setZ(8);
+                playerMeshes[focusPlayer].add(controls.object);
+            }
         }
         
-        viewer.serverTick = function(packet) {
+        viewer.onServerTick = function(packet) {
             stats.update();
             //console.log(packet);
             if(packet.n) {
@@ -433,7 +441,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      po
             // you get an undefined queue error.
             humane.log(line);
         });
-        socket.on(types.eventTypes.tick, v.serverTick);
+        socket.on(types.eventTypes.tick, v.onServerTick);
         
         
         if (runLocal) {
