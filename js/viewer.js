@@ -9,6 +9,8 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
     var thisPlayerId = null;
     var focusPlayer = null;
     var activeControls = null;
+    // `self` is `window` unless you're in a worker 
+    var now = ( self.performance && self.performance.now ) ? self.performance.now.bind( performance ) : Date.now;
     
     var rendererDivId = "renderer";
     var colors = {};
@@ -77,6 +79,10 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
         var viewer = {};
         var objects = [];
         var playerMeshes = [];
+        var recentServerPositions = [];
+        var recentServerVelocities = [];
+        var recentTickTimestamp = 0;
+        
         viewer.objects = objects;
         
         var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -232,24 +238,47 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
         }
 
         
-        viewer.update = function() {
-            // on paint - should be faster than onServerTick
+        viewer.onPaint = function() {
+            // on paint - hopefully faster than onServerTick
             controls.update();
+            
+            predictPositions(objects, recentServerPositions, recentServerVelocities, recentTickTimestamp);
+            
             //controls.updateCommands();
             renderer.render( scene, camera );
         }
         
-        function updatePositions(positions) {
+        function setPositions(objects, dstPositions) {
+            for(var i = 0; i < objects.length; i++) {
+                var obj = objects[i].mesh;
+                var vec = dstPositions[i];
+                obj.position.x = vec[0];
+                obj.position.y = vec[1];
+                obj.position.z = vec[2];
+            }
+        }
+        
+        function predictPositions(objects, srcPositions, velocities, lastUpdateTimestamp) {
+            //return;
+            var dt = (now() - lastUpdateTimestamp) / 1000.0;
+            for(var i = 0; i < objects.length; i++) {
+                var pos = objects[i].mesh.position;
+                var srcPos = srcPositions[i];
+                var vel = velocities[i];
+                pos.x = srcPos[0] + vel[0] * dt;
+                pos.y = srcPos[1] + vel[1] * dt;
+                pos.z = srcPos[2] + vel[2] * dt;
+            }
+        };
+        
+        function updatePositions(positions, velocities) {
             //console.log(packet.p);
             if(positions.length != objects.length)
                 console.warn("Simulation and viewer object count desynced", positions.length, objects.length);
-            for(var i = 0; i < objects.length; i++) {
-                var obj = objects[i].mesh;
-                //obj.position.copy(packet.p[i]);
-                var vec = positions[i];
-                obj.position.set(vec[0], vec[1], vec[2]);
-                //obj.velocity = packet.v[i] 
-            }
+            recentServerPositions = positions;
+            recentServerVelocities = velocities;
+            recentTickTimestamp = now();
+            //setPositions(objects, positions);
             //console.log(focusPlayer);
         }
         
@@ -345,7 +374,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
                 newObjects(packet.n);
             }
             if(packet.p) {
-                updatePositions(packet.p);
+                updatePositions(packet.p, packet.v);
             }
             sendCommands();
             if(packet.n) {
@@ -405,7 +434,7 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
 
         function animate() {
             requestAnimationFrame( animate );
-            v.update();
+            v.onPaint();
         };
         
         requestAnimationFrame( animate );
