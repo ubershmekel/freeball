@@ -5,7 +5,7 @@ var require = {
     shim: {
         // --- Use shim to mix together all subcomponents
         'Stats': { exports: 'Stats' },
-        'TrackballControls': { deps: ['three'], exports: 'THREE' },
+        'trackballControls': { deps: ['three'], exports: 'THREE' },
         'cannon': { exports: 'CANNON'}
     },
     paths: {
@@ -14,7 +14,9 @@ var require = {
         cannon: 'node_modules/cannon/build/cannon',
         Stats: 'js/Stats',
         optional: 'js/optional',
-        TrackballControls: 'js/TrackballControls',
+        trackballControls: 'js/controls/trackballControls',
+        pointerLockControls: 'js/controls/pointerLockControls',
+        autoCameraControls: 'js/controls/autoCameraControls',
         socketio: 'socket.io/socket.io'
     }
 };

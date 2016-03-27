@@ -2,8 +2,8 @@
 // client-side THREE.JS viewer of the game
 var v;
 requirejs(
-       ['three', 'Stats', 'js/types', 'js/server', 'js/keyboardCommands', 'js/BallControls', 'optional!socketio', 'TrackballControls'], 
-function(THREE,   Stats,      types,      server,      keyboardCommands,      BallControls,            socketio) {
+       ['three', 'Stats', 'js/types', 'js/server', 'js/keyboardCommands',    'pointerLockControls', 'optional!socketio', 'trackballControls'], 
+function(THREE,   Stats,      types,      server,      keyboardCommands,      pointerLockControls,            socketio) {
     var bodyTypes = types.bodyTypes;
     var socket;
     var thisPlayerId = null;
@@ -57,8 +57,8 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      Ba
         v.renderer.setSize( window.innerWidth, window.innerHeight );
     };
     
-    var initControls = function(camera, renderer) {
-        var trackBall = new THREE.TrackballControls( camera );
+    var initTrackball = function(camera, renderer) {
+        var trackBall = new THREE.trackballControls( camera );
         trackBall.rotateSpeed = 5.0;
         trackBall.zoomSpeed = 2.0;
         trackBall.panSpeed = 2.0;
@@ -90,12 +90,12 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      Ba
         var scene = viewer.scene;
         scene.fog = new THREE.Fog( colors.darkNight, 0, 500 );
 
-        if (BallControls.supportsPointerLock) {
-            controls = new BallControls.BallControls(camera);
-            BallControls.requirePointerLock();
+        if (pointerLockControls.supportsPointerLock) {
+            controls = new pointerLockControls.pointerLockControls(camera);
+            pointerLockControls.requirePointerLock();
             scene.add(controls.object);
         } else {
-            controls = initControls(camera, renderer);
+            controls = initTrackball(camera, renderer);
             scene.add(camera);
         }
 
@@ -109,8 +109,8 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,      Ba
 
         //scene.add( controls.object );
         //scene.add( controls.getObject() );
-        //var controls = new BallControls.BallControls(camera);
-        //BallControls.requirePointerLock();
+        //var controls = new pointerLockControls.pointerLockControls(camera);
+        //pointerLockControls.requirePointerLock();
         
         
 
