@@ -63,7 +63,7 @@ define(function(require) {
                 playersQueue.push(player);
                 var created = tryCreateMatch();
                 if(!created)
-                    socket.emit(types.eventTypes.toast, "Waiting for another player");
+                    socket.emit(types.eventTypes.toast, "Get another player to join you <img style='height: 2em;' src='/images/spinner.svg' />");
             });
             
             socket.on(types.eventTypes.command, function(com) {

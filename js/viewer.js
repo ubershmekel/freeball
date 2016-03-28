@@ -105,6 +105,11 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
         if (true) {
             activeControls = autoCameraControls;
             controls = new autoCameraControls.autoCameraControls(camera, scene);
+            humane.log('WASD=move, L=dive, P=fly.');
+            if (socketio === undefined) {
+                humane.log('Pop the ball on your colored popper to score.');
+                humane.log('To play multiplayer `npm install -g freeball` or <a href="https://github.com/ubershmekel/freeball">git clone</a>')
+            }
         } else {
             if (pointerLockControls.supportsPointerLock) {
                 activeControls = pointerLockControls;
