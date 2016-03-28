@@ -9,6 +9,9 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
     var thisPlayerId = null;
     var focusPlayer = null;
     var activeControls = null;
+    
+    var tweenSpeed = 0.6;
+    
     // `self` is `window` unless you're in a worker 
     var now = ( self.performance && self.performance.now ) ? self.performance.now.bind( performance ) : Date.now;
     
@@ -237,12 +240,14 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
             }
         }
 
-        
+        var lastPaintTime = now(); 
         viewer.onPaint = function() {
             // on paint - hopefully faster than onServerTick
-            controls.update();
+            var dt = now() - lastPaintTime;
             
-            predictPositions(objects, recentServerPositions, recentServerVelocities, recentTickTimestamp);
+            //predictPositions(objects, recentServerPositions, recentServerVelocities, recentTickTimestamp);
+            setPositions(objects, recentServerPositions);
+            controls.update(dt);
             
             //controls.updateCommands();
             renderer.render( scene, camera );
@@ -265,9 +270,10 @@ function(THREE,   Stats,      types,      server,      keyboardCommands,        
                 var pos = objects[i].mesh.position;
                 var srcPos = srcPositions[i];
                 var vel = velocities[i];
-                pos.x = srcPos[0] + vel[0] * dt;
-                pos.y = srcPos[1] + vel[1] * dt;
-                pos.z = srcPos[2] + vel[2] * dt;
+                pos.multiplyScalar(1 - tweenSpeed)
+                pos.x = pos.x + (srcPos[0] + vel[0] * dt) * tweenSpeed;
+                pos.y = pos.y + (srcPos[1] + vel[1] * dt) * tweenSpeed;
+                pos.z = pos.z + (srcPos[2] + vel[2] * dt) * tweenSpeed;
             }
         };
         
