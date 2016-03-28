@@ -99,20 +99,22 @@ body {
 #scoreBoard {
     background-color: #000;
     color: #fff;
-    position:absolute;
-    padding: 0;
+
     position: absolute;
-    right: 0;
-    /*
+    bottom: 0;
     left: 50%;
     transform: translate(-50%, 0);
-    */
-    font-size: 20px;
+
+    font-size: 60px;
+
+    padding: 0;
+    border-radius: 25px 25px 0 0;
+    overflow: hidden;    
 }
 
 .score {
     display: inline-block;
-    padding: 4px 8px;
+    padding: 4px 16px;
 }
 
 #score0 {
