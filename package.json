@@ -29,7 +29,7 @@
     "express": "^4.13.4",
     "requirejs": "^2.1.22",
     "socket.io": "^1.4.5",
-    "three": "^0.75.0"
+    "three": "0.74.0"
   },
   "bin": {
     "freeball": "app.js"
