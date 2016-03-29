@@ -1,6 +1,6 @@
 {
   "name": "freeball",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Soccer with balls that can fly",
   "main": "app.js",
   "scripts": {
